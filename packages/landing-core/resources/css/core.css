@@ -1,0 +1,217 @@
+.lp-body {
+    margin: 0;
+    background: var(--lp-color-background);
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-sans);
+}
+
+.lp-section {
+    padding-block: var(--lp-section-y);
+    background: var(--lp-color-background);
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-sans);
+}
+
+.lp-container {
+    width: min(100% - 2rem, var(--lp-container));
+    margin-inline: auto;
+}
+
+.lp-section-header {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 44rem;
+    margin-block-end: var(--lp-spacing-content-gap);
+}
+
+.lp-section-header-center {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.lp-section-content {
+    display: grid;
+    gap: var(--lp-spacing-content-gap);
+}
+
+.lp-heading,
+.lp-subheading {
+    margin: 0;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+    letter-spacing: 0;
+}
+
+.lp-heading {
+    font-size: 3rem;
+    line-height: 1.05;
+    font-weight: 700;
+}
+
+.lp-subheading {
+    font-size: 1.25rem;
+    line-height: 1.25;
+    font-weight: 600;
+}
+
+.lp-eyebrow {
+    color: var(--lp-color-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lp-text,
+.lp-muted {
+    margin: 0;
+    font-family: var(--lp-font-sans);
+    line-height: 1.7;
+}
+
+.lp-text {
+    color: var(--lp-color-text);
+}
+
+.lp-muted {
+    color: var(--lp-color-muted);
+}
+
+.lp-card {
+    background: var(--lp-color-surface);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-lg);
+    box-shadow: var(--lp-shadow-card);
+}
+
+.lp-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--lp-radius-md);
+    font-family: var(--lp-font-sans);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.lp-button:hover {
+    transform: translateY(-1px);
+}
+
+.lp-button:focus-visible,
+.lp-input:focus-visible,
+.lp-textarea:focus-visible,
+.lp-select:focus-visible {
+    outline: none;
+    box-shadow: var(--lp-shadow-focus);
+}
+
+.lp-button-primary {
+    background: var(--lp-color-primary);
+    color: var(--lp-color-on-primary);
+    box-shadow: var(--lp-shadow-button);
+}
+
+.lp-button-secondary {
+    background: var(--lp-color-surface);
+    color: var(--lp-color-text);
+    border-color: var(--lp-color-border);
+}
+
+.lp-label {
+    display: grid;
+    gap: 0.5rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.lp-input,
+.lp-textarea,
+.lp-select {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--lp-color-surface);
+    color: var(--lp-color-text);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-md);
+    font-family: var(--lp-font-sans);
+    line-height: 1.4;
+}
+
+.lp-textarea {
+    min-height: 8rem;
+    resize: vertical;
+}
+
+.lp-error,
+.lp-success {
+    margin: 0;
+    font-family: var(--lp-font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.lp-error {
+    color: var(--lp-color-danger);
+}
+
+.lp-success {
+    color: var(--lp-color-success);
+}
+
+.lp-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 1.75rem;
+    padding: 0.35rem 0.65rem;
+    color: var(--lp-color-primary);
+    background: color-mix(in srgb, var(--lp-color-primary) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--lp-color-primary) 20%, transparent);
+    border-radius: var(--lp-radius-md);
+    font-family: var(--lp-font-sans);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.lp-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    flex: 0 0 auto;
+}
+
+.lp-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 640px) {
+    .lp-heading {
+        font-size: 2rem;
+    }
+
+    .lp-section-header {
+        margin-block-end: 1.5rem;
+    }
+}

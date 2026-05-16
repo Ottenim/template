@@ -26,6 +26,7 @@
         "psr-4": {
             "App\\": "app/",
             "Template\\LandingCore\\": "packages/landing-core/src/",
+            "Template\\LandingContact\\": "packages/landing-contact/src/",
             "Template\\LandingWhatsapp\\": "packages/landing-whatsapp/src/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"

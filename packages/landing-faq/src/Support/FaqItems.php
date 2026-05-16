@@ -55,7 +55,10 @@ class FaqItems
             ])->values()->all(),
         ];
 
-        return json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: null;
+        return json_encode(
+            $schema,
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        ) ?: null;
     }
 
     protected function configuredItems(): Collection

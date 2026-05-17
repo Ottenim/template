@@ -1,0 +1,139 @@
+.lp-seo-admin-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+    align-items: start;
+    gap: var(--lp-spacing-content-gap);
+}
+
+.lp-seo-admin-actions,
+.lp-seo-admin-item-actions,
+.lp-seo-admin-meta,
+.lp-seo-admin-checks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lp-seo-admin-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.lp-seo-admin-item,
+.lp-seo-admin-empty,
+.lp-seo-admin-form,
+.lp-seo-preview {
+    padding: var(--lp-spacing-content-gap);
+}
+
+.lp-seo-admin-item {
+    display: grid;
+    gap: 1rem;
+}
+
+.lp-seo-admin-summary {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.lp-seo-admin-title {
+    margin: 0 0 0.5rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.lp-seo-admin-form,
+.lp-seo-preview {
+    display: grid;
+    gap: 1rem;
+}
+
+.lp-seo-admin-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.lp-seo-admin-check {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--lp-font-sans);
+}
+
+.lp-seo-admin-check input {
+    accent-color: var(--lp-color-primary);
+}
+
+.lp-seo-admin-feedback {
+    padding: 0.75rem 0.875rem;
+    border: 1px solid currentColor;
+    border-radius: var(--lp-radius-md);
+}
+
+.lp-seo-input-invalid {
+    border-color: var(--lp-color-danger);
+}
+
+.lp-seo-preview {
+    position: sticky;
+    top: 1rem;
+}
+
+.lp-seo-preview-block {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.lp-seo-preview-url {
+    margin: 0;
+    color: var(--lp-color-success);
+    font-family: var(--lp-font-sans);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.lp-seo-preview-title {
+    overflow-wrap: anywhere;
+}
+
+.lp-seo-preview-image {
+    display: grid;
+    min-height: 8rem;
+    place-items: center;
+    padding: 1rem;
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-md);
+    color: var(--lp-color-muted);
+    font-family: var(--lp-font-sans);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+    .lp-seo-admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lp-seo-preview {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .lp-seo-admin-row {
+        grid-template-columns: 1fr;
+    }
+
+    .lp-seo-admin-actions .lp-button,
+    .lp-seo-admin-item-actions .lp-button {
+        width: 100%;
+    }
+}

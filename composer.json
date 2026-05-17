@@ -30,6 +30,7 @@
             "Template\\LandingFaq\\": "packages/landing-faq/src/",
             "Template\\LandingLeadCapture\\": "packages/landing-lead-capture/src/",
             "Template\\LandingPricing\\": "packages/landing-pricing/src/",
+            "Template\\LandingSeo\\": "packages/landing-seo/src/",
             "Template\\LandingTestimonials\\": "packages/landing-testimonials/src/",
             "Template\\LandingWhatsapp\\": "packages/landing-whatsapp/src/",
             "Database\\Factories\\": "database/factories/",

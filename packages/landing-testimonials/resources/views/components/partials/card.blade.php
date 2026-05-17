@@ -5,11 +5,18 @@
     ])->filter()->implode(' - ');
 @endphp
 
-<article class="lp-card lp-testimonial-card @if ($featured) lp-testimonial-card-featured @endif">
+<article @class([
+    'lp-card',
+    'lp-testimonial-card',
+    'lp-testimonial-card-featured' => $featured,
+])>
     @if ($showRating && $testimonial['rating'])
         <div class="lp-testimonial-rating" aria-label="Nota {{ $testimonial['rating'] }} de 5">
             @for ($star = 1; $star <= 5; $star++)
-                <span class="lp-testimonial-star @if ($star > $testimonial['rating']) lp-testimonial-star-muted @endif" aria-hidden="true">&#9733;</span>
+                <span @class([
+                    'lp-testimonial-star',
+                    'lp-testimonial-star-muted' => $star > $testimonial['rating'],
+                ]) aria-hidden="true">&#9733;</span>
             @endfor
         </div>
     @endif

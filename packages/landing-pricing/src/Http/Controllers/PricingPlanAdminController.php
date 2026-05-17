@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Template\LandingPricing\Http\Requests\StorePricingPlanRequest;
 use Template\LandingPricing\Http\Requests\UpdatePricingPlanRequest;
 use Template\LandingPricing\Models\PricingPlan;
+use Template\LandingPricing\Support\PricingUrl;
 
 class PricingPlanAdminController extends Controller
 {
@@ -83,7 +84,7 @@ class PricingPlanAdminController extends Controller
             'billing_period_label' => $this->nullableString($request->input('billing_period_label')),
             'features' => $this->featuresArray($request->input('features')),
             'cta_label' => $this->nullableString($request->input('cta_label')),
-            'cta_url' => $this->nullableString($request->input('cta_url')),
+            'cta_url' => PricingUrl::normalize($request->input('cta_url')),
             'note' => $this->nullableString($request->input('note')),
             'badge' => $this->nullableString($request->input('badge')),
             'sort_order' => (int) ($request->input('sort_order') ?? 0),

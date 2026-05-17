@@ -1,0 +1,225 @@
+.lp-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--lp-pricing-columns, 3), minmax(0, 1fr));
+    align-items: stretch;
+    gap: var(--lp-spacing-content-gap);
+}
+
+.lp-pricing-card {
+    display: grid;
+    gap: 1.25rem;
+    align-content: space-between;
+    min-width: 0;
+    padding: var(--lp-spacing-content-gap);
+}
+
+.lp-pricing-card-featured,
+.lp-pricing-table-featured {
+    border-color: var(--lp-color-primary);
+}
+
+.lp-pricing-card-header,
+.lp-pricing-card-footer {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.lp-pricing-title {
+    margin: 0;
+}
+
+.lp-pricing-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+}
+
+.lp-pricing-price strong {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.lp-pricing-features {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lp-pricing-features li {
+    position: relative;
+    padding-inline-start: 1.35rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-sans);
+    line-height: 1.6;
+}
+
+.lp-pricing-features li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.72em;
+    inline-size: 0.45rem;
+    block-size: 0.45rem;
+    border-radius: 50%;
+    background: var(--lp-color-primary);
+}
+
+.lp-pricing-cta {
+    width: 100%;
+}
+
+.lp-pricing-note {
+    font-size: 0.875rem;
+}
+
+.lp-pricing-layout-compact .lp-pricing-card {
+    gap: 1rem;
+}
+
+.lp-pricing-layout-compact .lp-pricing-features {
+    gap: 0.5rem;
+}
+
+.lp-pricing-layout-compact .lp-pricing-price strong {
+    font-size: 2rem;
+}
+
+.lp-pricing-table-wrap {
+    overflow-x: auto;
+}
+
+.lp-pricing-table {
+    width: 100%;
+    min-width: 48rem;
+    border-collapse: collapse;
+    background: var(--lp-color-surface);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-lg);
+    box-shadow: var(--lp-shadow-card);
+    overflow: hidden;
+}
+
+.lp-pricing-table th,
+.lp-pricing-table td {
+    padding: 1rem;
+    border-block-end: 1px solid var(--lp-color-border);
+    text-align: start;
+    vertical-align: top;
+}
+
+.lp-pricing-table thead th {
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+    font-size: 0.9375rem;
+}
+
+.lp-pricing-table tbody th {
+    display: grid;
+    gap: 0.5rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+    font-size: 1rem;
+}
+
+.lp-pricing-table tr:last-child th,
+.lp-pricing-table tr:last-child td {
+    border-block-end: 0;
+}
+
+.lp-pricing-admin-actions,
+.lp-pricing-admin-item-actions,
+.lp-pricing-admin-meta,
+.lp-pricing-admin-checks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lp-pricing-admin-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.lp-pricing-admin-item,
+.lp-pricing-admin-empty,
+.lp-pricing-admin-form {
+    padding: var(--lp-spacing-content-gap);
+}
+
+.lp-pricing-admin-item {
+    display: grid;
+    gap: 1rem;
+}
+
+.lp-pricing-admin-summary {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.lp-pricing-admin-name {
+    margin: 0 0 0.5rem;
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.lp-pricing-admin-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 56rem;
+}
+
+.lp-pricing-admin-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.lp-pricing-admin-check {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--lp-font-sans);
+}
+
+.lp-pricing-admin-check input {
+    accent-color: var(--lp-color-primary);
+}
+
+.lp-pricing-admin-feedback {
+    padding: 0.75rem 0.875rem;
+    border: 1px solid currentColor;
+    border-radius: var(--lp-radius-md);
+}
+
+.lp-pricing-input-invalid {
+    border-color: var(--lp-color-danger);
+}
+
+@media (max-width: 900px) {
+    .lp-pricing-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .lp-pricing-grid,
+    .lp-pricing-admin-row {
+        grid-template-columns: 1fr;
+    }
+
+    .lp-pricing-admin-actions .lp-button,
+    .lp-pricing-admin-item-actions .lp-button,
+    .lp-pricing-admin-item-actions form {
+        width: 100%;
+    }
+}

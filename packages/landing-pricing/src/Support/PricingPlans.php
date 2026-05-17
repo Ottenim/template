@@ -88,7 +88,7 @@ class PricingPlans
             ),
             'features' => $this->featuresValue(data_get($plan, 'features', [])),
             'cta_label' => $this->nullableString(data_get($plan, 'cta_label', config('landing-pricing.cta.default_label'))),
-            'cta_url' => $this->nullableString(data_get($plan, 'cta_url', config('landing-pricing.cta.default_url'))),
+            'cta_url' => PricingUrl::normalize(data_get($plan, 'cta_url', config('landing-pricing.cta.default_url'))),
             'note' => $this->nullableString(data_get($plan, 'note')),
             'badge' => $badge ?: ($featured ? $this->nullableString(config('landing-pricing.featured_label')) : null),
             'sort_order' => (int) data_get($plan, 'sort_order', $index),

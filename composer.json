@@ -26,6 +26,7 @@
         "psr-4": {
             "App\\": "app/",
             "Template\\LandingAnalytics\\": "packages/landing-analytics/src/",
+            "Template\\LandingCookieConsent\\": "packages/landing-cookie-consent/src/",
             "Template\\LandingCore\\": "packages/landing-core/src/",
             "Template\\LandingContact\\": "packages/landing-contact/src/",
             "Template\\LandingFaq\\": "packages/landing-faq/src/",

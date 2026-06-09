@@ -1,0 +1,24 @@
+{
+    "name": "template/landing-analytics",
+    "description": "Analytics and tracking module for Laravel landing pages.",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0",
+    "autoload": {
+        "psr-4": {
+            "Template\\LandingAnalytics\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Template\\LandingAnalytics\\LandingAnalyticsServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^13.0",
+        "illuminate/view": "^13.0"
+    }
+}

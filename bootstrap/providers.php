@@ -1,6 +1,7 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use Template\LandingAnalytics\LandingAnalyticsServiceProvider;
 use Template\LandingContact\LandingContactServiceProvider;
 use Template\LandingCore\LandingCoreServiceProvider;
 use Template\LandingFaq\LandingFaqServiceProvider;
@@ -13,6 +14,7 @@ use Template\LandingWhatsapp\LandingWhatsappServiceProvider;
 return [
     AppServiceProvider::class,
     LandingCoreServiceProvider::class,
+    LandingAnalyticsServiceProvider::class,
     LandingContactServiceProvider::class,
     LandingFaqServiceProvider::class,
     LandingLeadCaptureServiceProvider::class,

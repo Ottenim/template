@@ -1,0 +1,268 @@
+.lp-cookie-consent {
+    position: fixed;
+    inset: 0;
+    z-index: var(--lp-cookie-consent-z-index, 60);
+    color: var(--lp-color-text);
+    font-family: var(--lp-font-sans);
+    pointer-events: none;
+}
+
+.lp-cookie-banner,
+.lp-cookie-modal,
+.lp-cookie-reopen {
+    pointer-events: auto;
+}
+
+.lp-cookie-banner {
+    position: absolute;
+    inset-inline: 0;
+    padding-block: 1rem;
+    background: var(--lp-color-surface);
+    border-block: 1px solid var(--lp-color-border);
+    box-shadow: var(--lp-shadow-card);
+}
+
+.lp-cookie-consent-position-bottom .lp-cookie-banner {
+    inset-block-end: 0;
+}
+
+.lp-cookie-consent-position-top .lp-cookie-banner {
+    inset-block-start: 0;
+}
+
+.lp-cookie-consent-position-bottom-left .lp-cookie-banner,
+.lp-cookie-consent-position-bottom-right .lp-cookie-banner,
+.lp-cookie-consent-layout-card .lp-cookie-banner {
+    inset-inline: auto;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    width: min(28rem, calc(100vw - 2rem));
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-lg);
+}
+
+.lp-cookie-consent-position-bottom-left .lp-cookie-banner,
+.lp-cookie-consent-layout-card.lp-cookie-consent-position-bottom-left .lp-cookie-banner {
+    inset-inline-start: max(1rem, env(safe-area-inset-left));
+}
+
+.lp-cookie-consent-position-bottom-right .lp-cookie-banner,
+.lp-cookie-consent-layout-card.lp-cookie-consent-position-bottom-right .lp-cookie-banner,
+.lp-cookie-consent-layout-card.lp-cookie-consent-position-bottom .lp-cookie-banner {
+    inset-inline-end: max(1rem, env(safe-area-inset-right));
+}
+
+.lp-cookie-banner-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--lp-spacing-content-gap);
+}
+
+.lp-cookie-consent-layout-card .lp-cookie-banner-inner,
+.lp-cookie-consent-layout-compact .lp-cookie-banner-inner,
+.lp-cookie-consent-position-bottom-left .lp-cookie-banner-inner,
+.lp-cookie-consent-position-bottom-right .lp-cookie-banner-inner {
+    display: grid;
+}
+
+.lp-cookie-copy {
+    display: grid;
+    gap: 0.45rem;
+    max-width: 48rem;
+}
+
+.lp-cookie-title,
+.lp-cookie-message,
+.lp-cookie-modal-description {
+    margin: 0;
+}
+
+.lp-cookie-policy-link {
+    color: var(--lp-color-primary);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.lp-cookie-actions,
+.lp-cookie-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.lp-cookie-modal {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: color-mix(in srgb, var(--lp-color-text) 38%, transparent);
+}
+
+.lp-cookie-modal[hidden],
+.lp-cookie-banner[hidden],
+.lp-cookie-reopen[hidden] {
+    display: none;
+}
+
+.lp-cookie-dialog {
+    width: min(100%, 44rem);
+    max-height: min(42rem, calc(100vh - 2rem));
+    display: grid;
+    gap: var(--lp-spacing-content-gap);
+    padding: var(--lp-spacing-content-gap);
+    overflow: auto;
+}
+
+.lp-cookie-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.lp-cookie-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    background: var(--lp-color-surface);
+    color: var(--lp-color-text);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-md);
+    cursor: pointer;
+}
+
+.lp-cookie-close:focus-visible,
+.lp-cookie-toggle input:focus-visible {
+    outline: none;
+    box-shadow: var(--lp-shadow-focus);
+}
+
+.lp-cookie-close span {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.lp-cookie-categories {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.lp-cookie-category {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--lp-color-background);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-md);
+}
+
+.lp-cookie-category-copy {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.lp-cookie-category-name {
+    color: var(--lp-color-text);
+    font-weight: 700;
+}
+
+.lp-cookie-category-description {
+    font-size: 0.9375rem;
+}
+
+.lp-cookie-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lp-cookie-toggle input {
+    position: absolute;
+    inset: 0;
+    inline-size: 3rem;
+    block-size: 1.65rem;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.lp-cookie-toggle input + span {
+    position: relative;
+    display: inline-flex;
+    inline-size: 3rem;
+    block-size: 1.65rem;
+    background: var(--lp-color-border);
+    border: 1px solid var(--lp-color-border);
+    border-radius: var(--lp-radius-lg);
+    transition: background 160ms ease, border-color 160ms ease;
+}
+
+.lp-cookie-toggle input + span::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 0.18rem;
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+    background: var(--lp-color-background);
+    border-radius: var(--lp-radius-md);
+    transform: translateY(-50%);
+    transition: transform 160ms ease;
+}
+
+.lp-cookie-toggle input:checked + span {
+    background: var(--lp-color-primary);
+    border-color: var(--lp-color-primary);
+}
+
+.lp-cookie-toggle input:checked + span::before {
+    transform: translate(1.32rem, -50%);
+}
+
+.lp-cookie-toggle input:disabled {
+    cursor: not-allowed;
+}
+
+.lp-cookie-toggle input:disabled + span {
+    opacity: 0.75;
+}
+
+.lp-cookie-reopen {
+    position: absolute;
+    inset-inline-start: max(1rem, env(safe-area-inset-left));
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    min-height: 2.5rem;
+    padding-block: 0.65rem;
+}
+
+@media (max-width: 720px) {
+    .lp-cookie-banner-inner,
+    .lp-cookie-actions,
+    .lp-cookie-modal-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .lp-cookie-actions .lp-button,
+    .lp-cookie-modal-actions .lp-button {
+        width: 100%;
+    }
+
+    .lp-cookie-modal-header {
+        gap: 0.75rem;
+    }
+
+    .lp-cookie-category {
+        grid-template-columns: 1fr;
+    }
+}

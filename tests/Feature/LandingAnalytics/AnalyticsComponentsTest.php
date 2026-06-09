@@ -46,6 +46,7 @@ class AnalyticsComponentsTest extends TestCase
         config()->set('landing-analytics.providers.linkedin_insight.enabled', true);
         config()->set('landing-analytics.providers.linkedin_insight.id', '789');
         config()->set('landing-analytics.debug', true);
+        config()->set('landing-analytics.consent.default_granted', true);
 
         $html = Blade::render('<x-analytics::body />');
 

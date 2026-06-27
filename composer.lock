@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36793882908b6cbdd344b5a4840231db",
+    "content-hash": "632bf5edbd5285fd4e1a66ab3b255b24",
     "packages": [
         {
             "name": "brick/math",
@@ -5761,6 +5761,384 @@
                 }
             ],
             "time": "2026-03-31T07:15:36+00:00"
+        },
+        {
+            "name": "template/landing-analytics",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-analytics",
+                "reference": "1df260b65e7ca8b5252cecb6c77d27f6856b5d33"
+            },
+            "require": {
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingAnalytics\\LandingAnalyticsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingAnalytics\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Analytics and tracking module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-contact",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-contact",
+                "reference": "2cccdc175622723c25942a2155b3f6b7db1bd8b5"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/mail": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingContact\\LandingContactServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingContact\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Contact form module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-cookie-consent",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-cookie-consent",
+                "reference": "862732912c6cccfaff9dfddacc74faaefe3daa4f"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingCookieConsent\\LandingCookieConsentServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingCookieConsent\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Cookie consent and LGPD privacy module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-core",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-core",
+                "reference": "7852c9801887907c03647ab628ebc8daa0dba1f6"
+            },
+            "require": {
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingCore\\LandingCoreServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingCore\\": "src/"
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Landing page core module with shared theme, registries, rendering helpers, and base Blade components.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-faq",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-faq",
+                "reference": "65b213a7c97688cf11208094746cbd6274607c7a"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingFaq\\LandingFaqServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingFaq\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "FAQ module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-lead-capture",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-lead-capture",
+                "reference": "c96029ac2b1252bd3c2486ede868d07bc1b74776"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/mail": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingLeadCapture\\LandingLeadCaptureServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingLeadCapture\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Lead capture module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-pricing",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-pricing",
+                "reference": "79c0c319ad12100ff327d786439fb8be4398014a"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingPricing\\LandingPricingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingPricing\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Pricing module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-seo",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-seo",
+                "reference": "e70d7625a9973f05a20e3ce33d6b9e2e85787180"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingSeo\\LandingSeoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingSeo\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "SEO manager module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-testimonials",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-testimonials",
+                "reference": "8ab3c39af36b66e64f38211eec10a364cfc53001"
+            },
+            "require": {
+                "illuminate/database": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingTestimonials\\LandingTestimonialsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingTestimonials\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Testimonials module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "template/landing-whatsapp",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/landing-whatsapp",
+                "reference": "50a0c4afda2ba1e884a707bde77a8f0950ca5aa5"
+            },
+            "require": {
+                "illuminate/support": "^13.0",
+                "illuminate/view": "^13.0",
+                "php": "^8.3",
+                "template/landing-core": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Template\\LandingWhatsapp\\LandingWhatsappServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Template\\LandingWhatsapp\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "WhatsApp CTA module for Laravel landing pages.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",

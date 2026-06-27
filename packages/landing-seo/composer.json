@@ -21,6 +21,7 @@
         "illuminate/database": "^13.0",
         "illuminate/http": "^13.0",
         "illuminate/support": "^13.0",
-        "illuminate/view": "^13.0"
+        "illuminate/view": "^13.0",
+        "template/landing-core": "^1.0"
     }
 }

@@ -3,16 +3,21 @@
 namespace Template\LandingLeadCapture\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Template\LandingLeadCapture\Models\Lead;
 
-class LeadCaptured extends Mailable
+class LeadCaptured extends Mailable implements ShouldQueue
 {
     use Queueable;
     use SerializesModels;
+
+    public int $tries = 3;
+
+    public int $backoff = 10;
 
     public function __construct(
         public array $data,

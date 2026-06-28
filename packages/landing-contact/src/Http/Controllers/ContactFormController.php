@@ -4,6 +4,7 @@ namespace Template\LandingContact\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Template\LandingContact\Http\Requests\StoreContactMessageRequest;
@@ -26,7 +27,13 @@ class ContactFormController extends Controller
             ]);
         }
 
-        $this->sendNotification($data, $contactMessage);
+        $emailQueued = $this->sendNotification($data, $contactMessage);
+
+        Log::info('contact.submitted', [
+            'contact_message_id' => $contactMessage?->id,
+            'saved_to_database' => $contactMessage !== null,
+            'email_queued' => $emailQueued,
+        ]);
 
         $response = config('landing-contact.redirect_after_submit')
             ? redirect()->to(config('landing-contact.redirect_after_submit'))
@@ -38,19 +45,21 @@ class ContactFormController extends Controller
         ]);
     }
 
-    protected function sendNotification(array $data, ?ContactMessage $contactMessage): void
+    protected function sendNotification(array $data, ?ContactMessage $contactMessage): bool
     {
         if (! (bool) config('landing-contact.send_email.enabled', true)) {
-            return;
+            return false;
         }
 
         $recipient = trim((string) config('landing-contact.send_email.to'));
 
         if ($recipient === '') {
-            return;
+            return false;
         }
 
         Mail::to($recipient)->send(new ContactMessageReceived($data, $contactMessage));
+
+        return true;
     }
 
     protected function metadata(): array

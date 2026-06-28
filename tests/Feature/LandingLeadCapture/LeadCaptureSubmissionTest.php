@@ -3,6 +3,7 @@
 namespace Tests\Feature\LandingLeadCapture;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Template\LandingLeadCapture\Mail\LeadCaptured;
 use Template\LandingLeadCapture\Models\Lead;
@@ -72,7 +73,7 @@ class LeadCaptureSubmissionTest extends TestCase
         $this->assertTrue($lead->metadata['tracking_enabled']);
         $this->assertNotEmpty($lead->ip_address);
 
-        Mail::assertSent(
+        Mail::assertQueued(
             LeadCaptured::class,
             fn (LeadCaptured $mail) => $mail->data['email'] === 'maria@example.test'
                 && $mail->lead?->is($lead) === true,
@@ -112,7 +113,7 @@ class LeadCaptureSubmissionTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('lp_leads', 0);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_it_can_skip_database_and_email_and_redirect_to_configured_url(): void
@@ -133,6 +134,37 @@ class LeadCaptureSubmissionTest extends TestCase
         $response->assertSessionHas('landing_lead_capture_success');
 
         $this->assertDatabaseCount('lp_leads', 0);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
+    }
+
+    public function test_it_logs_a_capture_event_without_pii(): void
+    {
+        Mail::fake();
+        Log::spy();
+
+        config()->set('landing-lead-capture.send_email.enabled', false);
+
+        $this->post(route('landing-lead-capture.submit'), [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.test',
+            'privacy_consent' => '1',
+            'source' => 'ebook',
+            'campaign' => 'lancamento',
+            'tag' => 'catalogo',
+        ]);
+
+        $lead = Lead::query()->firstOrFail();
+
+        Log::shouldHaveReceived('info')->withArgs(
+            function (string $message, array $context) use ($lead): bool {
+                return $message === 'lead.captured'
+                    && $context['lead_id'] === $lead->id
+                    && $context['saved_to_database'] === true
+                    && $context['email_queued'] === false
+                    && $context['source'] === 'ebook'
+                    && ! array_key_exists('email', $context)
+                    && ! array_key_exists('name', $context);
+            }
+        );
     }
 }

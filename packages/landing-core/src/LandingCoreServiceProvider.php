@@ -2,8 +2,11 @@
 
 namespace Template\LandingCore;
 
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Template\LandingCore\Http\Middleware\AssignRequestId;
 use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\MenuRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
@@ -49,6 +52,8 @@ class LandingCoreServiceProvider extends ServiceProvider
             return "<?php echo app(\\Template\\LandingCore\\Support\\SectionRenderer::class)->render(...[$expression]); ?>";
         });
 
+        $this->registerObservability();
+
         $this->publishes([
             __DIR__.'/../config/landing-core.php' => config_path('landing-core.php'),
             __DIR__.'/../config/landing-theme.php' => config_path('landing-theme.php'),
@@ -65,5 +70,18 @@ class LandingCoreServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/css/core.css' => public_path('vendor/landing-core/core.css'),
         ], 'landing-core-assets');
+    }
+
+    protected function registerObservability(): void
+    {
+        if (! (bool) config('landing-core.observability.request_id.enabled', true)) {
+            return;
+        }
+
+        $this->callAfterResolving(Kernel::class, function (Kernel $kernel) {
+            if ($kernel instanceof HttpKernel) {
+                $kernel->prependMiddlewareToGroup('web', AssignRequestId::class);
+            }
+        });
     }
 }

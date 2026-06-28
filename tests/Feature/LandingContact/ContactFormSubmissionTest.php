@@ -3,6 +3,7 @@
 namespace Tests\Feature\LandingContact;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Template\LandingContact\Mail\ContactMessageReceived;
 use Template\LandingContact\Models\ContactMessage;
@@ -50,7 +51,7 @@ class ContactFormSubmissionTest extends TestCase
         $this->assertSame('contact_form_submit', $contactMessage->metadata['tracking_event']);
         $this->assertNotEmpty($contactMessage->ip_address);
 
-        Mail::assertSent(
+        Mail::assertQueued(
             ContactMessageReceived::class,
             fn (ContactMessageReceived $mail) => $mail->data['email'] === 'maria@example.test'
                 && $mail->contactMessage?->is($contactMessage) === true,
@@ -83,7 +84,7 @@ class ContactFormSubmissionTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('lp_contact_messages', 0);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_it_can_skip_database_and_email_and_redirect_to_configured_url(): void
@@ -105,6 +106,34 @@ class ContactFormSubmissionTest extends TestCase
         $response->assertSessionHas('landing_contact_success');
 
         $this->assertDatabaseCount('lp_contact_messages', 0);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
+    }
+
+    public function test_it_logs_a_submission_event_without_pii(): void
+    {
+        Mail::fake();
+        Log::spy();
+
+        config()->set('landing-contact.send_email.enabled', false);
+
+        $this->post(route('landing-contact.submit'), [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.test',
+            'message' => 'Ola, quero receber uma proposta.',
+            'privacy_consent' => '1',
+        ]);
+
+        $contactMessage = ContactMessage::query()->firstOrFail();
+
+        Log::shouldHaveReceived('info')->withArgs(
+            function (string $message, array $context) use ($contactMessage): bool {
+                return $message === 'contact.submitted'
+                    && $context['contact_message_id'] === $contactMessage->id
+                    && $context['saved_to_database'] === true
+                    && $context['email_queued'] === false
+                    && ! array_key_exists('email', $context)
+                    && ! array_key_exists('message', $context);
+            }
+        );
     }
 }

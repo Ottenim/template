@@ -18,4 +18,11 @@ return [
     ],
 
     'sections' => [],
+
+    'observability' => [
+        'request_id' => [
+            'enabled' => true,
+            'header' => 'X-Request-Id',
+        ],
+    ],
 ];

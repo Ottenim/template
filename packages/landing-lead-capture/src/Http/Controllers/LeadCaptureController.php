@@ -4,6 +4,7 @@ namespace Template\LandingLeadCapture\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Template\LandingLeadCapture\Http\Requests\StoreLeadRequest;
@@ -26,7 +27,16 @@ class LeadCaptureController extends Controller
             ]);
         }
 
-        $this->sendNotification($data, $lead);
+        $emailQueued = $this->sendNotification($data, $lead);
+
+        Log::info('lead.captured', [
+            'lead_id' => $lead?->id,
+            'saved_to_database' => $lead !== null,
+            'email_queued' => $emailQueued,
+            'source' => $data['source'] ?? null,
+            'campaign' => $data['campaign'] ?? null,
+            'tag' => $data['tag'] ?? null,
+        ]);
 
         $response = config('landing-lead-capture.redirect_after_submit')
             ? redirect()->to(config('landing-lead-capture.redirect_after_submit'))
@@ -38,19 +48,21 @@ class LeadCaptureController extends Controller
         ]);
     }
 
-    protected function sendNotification(array $data, ?Lead $lead): void
+    protected function sendNotification(array $data, ?Lead $lead): bool
     {
         if (! (bool) config('landing-lead-capture.send_email.enabled', false)) {
-            return;
+            return false;
         }
 
         $recipient = trim((string) config('landing-lead-capture.send_email.to'));
 
         if ($recipient === '') {
-            return;
+            return false;
         }
 
         Mail::to($recipient)->send(new LeadCaptured($data, $lead));
+
+        return true;
     }
 
     protected function metadata(array $data): array

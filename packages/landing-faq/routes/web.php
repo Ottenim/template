@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Template\LandingFaq\Config\FaqConfig;
 use Template\LandingFaq\Http\Controllers\FaqAdminController;
 
-if ((bool) config('landing-faq.enabled', true) && (bool) config('landing-faq.admin.enabled', false)) {
-    Route::middleware(array_filter((array) config('landing-faq.admin.middleware', ['web', 'auth'])))
-        ->prefix(config('landing-faq.admin.prefix', 'admin/faq'))
+$config = FaqConfig::fromConfig();
+
+if ($config->enabled() && $config->adminEnabled()) {
+    Route::middleware($config->adminMiddleware())
+        ->prefix($config->adminPrefix())
         ->name('faq.admin.')
         ->group(function () {
             Route::get('/', [FaqAdminController::class, 'index'])->name('index');

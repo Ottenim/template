@@ -6,17 +6,19 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingFaq\Config\FaqConfig;
 use Template\LandingFaq\Http\Requests\StoreFaqItemRequest;
 use Template\LandingFaq\Http\Requests\UpdateFaqItemRequest;
 use Template\LandingFaq\Models\FaqItem;
 
 class FaqAdminController extends Controller
 {
-    public function index(): View
+    public function index(FaqConfig $config): View
     {
         $items = FaqItem::query()
             ->ordered()
-            ->paginate((int) config('landing-faq.admin.per_page', 15));
+            ->paginate($config->adminPerPage());
 
         return view('landing-faq::admin.index', [
             'items' => $items,
@@ -71,20 +73,9 @@ class FaqAdminController extends Controller
     {
         return [
             ...$request->validated(),
-            'category' => $this->nullableString($request->input('category')),
+            'category' => Coerce::nullableString($request->input('category')),
             'sort_order' => (int) ($request->input('sort_order') ?? 0),
             'is_active' => $request->boolean('is_active'),
         ];
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

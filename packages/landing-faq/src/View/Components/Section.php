@@ -5,6 +5,8 @@ namespace Template\LandingFaq\View\Components;
 use Illuminate\Support\Collection;
 use Illuminate\View\Component;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingFaq\Config\FaqConfig;
 use Template\LandingFaq\Support\FaqItems;
 
 class Section extends Component
@@ -40,25 +42,24 @@ class Section extends Component
         mixed $limit = null,
         mixed $enabled = null,
     ) {
-        $this->enabled = $this->boolValue(config('landing-faq.enabled', true), true)
-            && $this->boolValue(config('landing-faq.section.enabled', true), true)
-            && $this->boolValue($enabled, true);
+        $config = app(FaqConfig::class);
 
-        $this->eyebrow = $this->nullableString($eyebrow ?? config('landing-faq.section.eyebrow'));
-        $this->title = $this->nullableString($title ?? config('landing-faq.section.title'));
-        $this->subtitle = $this->nullableString($subtitle ?? config('landing-faq.section.subtitle'));
-        $this->layout = $this->layoutValue($layout ?? config('landing-faq.layout', 'accordion'));
-        $this->showCategories = $this->boolValue($showCategories, (bool) config('landing-faq.show_categories', false));
-        $this->defaultOpenFirstItem = $this->boolValue(
-            $defaultOpenFirstItem,
-            (bool) config('landing-faq.default_open_first_item', true),
-        );
+        $this->enabled = $config->enabled()
+            && $config->sectionEnabled()
+            && Coerce::bool($enabled, true);
 
-        $this->items = app(FaqItems::class)->publicItems($items, $this->limitValue($limit));
+        $this->eyebrow = Coerce::nullableString($eyebrow ?? $config->sectionEyebrow());
+        $this->title = Coerce::nullableString($title ?? $config->sectionTitle());
+        $this->subtitle = Coerce::nullableString($subtitle ?? $config->sectionSubtitle());
+        $this->layout = $this->layoutValue($layout ?? $config->layout());
+        $this->showCategories = Coerce::bool($showCategories, $config->showCategories());
+        $this->defaultOpenFirstItem = Coerce::bool($defaultOpenFirstItem, $config->defaultOpenFirstItem());
+
+        $this->items = app(FaqItems::class)->publicItems($items, $this->limitValue($limit, $config));
         $this->categorizedItems = $this->items->groupBy(
             fn (array $item) => $item['category'] ?: 'Geral',
         );
-        $this->schemaJson = (bool) config('landing-faq.schema.enabled', true)
+        $this->schemaJson = $config->schemaEnabled()
             ? app(FaqItems::class)->schemaJson($this->items)
             : null;
     }
@@ -75,14 +76,14 @@ class Section extends Component
 
     protected function layoutValue(mixed $value): string
     {
-        $layout = $this->nullableString($value) ?? 'accordion';
+        $layout = Coerce::string($value, 'accordion');
 
         return in_array($layout, ['accordion', 'grid', 'compact'], true) ? $layout : 'accordion';
     }
 
-    protected function limitValue(mixed $value): ?int
+    protected function limitValue(mixed $value, FaqConfig $config): ?int
     {
-        $value ??= config('landing-faq.limit');
+        $value ??= $config->limit();
 
         if ($value === null || $value === '') {
             return null;
@@ -91,33 +92,5 @@ class Section extends Component
         $limit = (int) $value;
 
         return $limit > 0 ? $limit : null;
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

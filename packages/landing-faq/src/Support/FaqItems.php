@@ -4,6 +4,8 @@ namespace Template\LandingFaq\Support;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingFaq\Config\FaqConfig;
 use Template\LandingFaq\Models\FaqItem;
 use Throwable;
 
@@ -63,7 +65,7 @@ class FaqItems
 
     protected function configuredItems(): Collection
     {
-        $configured = collect(config('landing-faq.items', []));
+        $configured = collect(FaqConfig::fromConfig()->items());
 
         if ($configured->isNotEmpty()) {
             return $configured;
@@ -74,11 +76,13 @@ class FaqItems
 
     protected function databaseItems(): Collection
     {
-        if (! (bool) config('landing-faq.database.enabled', true)) {
+        $config = FaqConfig::fromConfig();
+
+        if (! $config->databaseEnabled()) {
             return collect();
         }
 
-        $table = config('landing-faq.database.table', 'lp_faq_items');
+        $table = $config->databaseTable();
 
         try {
             if (! Schema::hasTable($table)) {
@@ -93,8 +97,8 @@ class FaqItems
 
     protected function normalizeItem(mixed $item, int $index): ?array
     {
-        $question = $this->nullableString(data_get($item, 'question'));
-        $answer = $this->nullableString(data_get($item, 'answer'));
+        $question = Coerce::nullableString(data_get($item, 'question'));
+        $answer = Coerce::nullableString(data_get($item, 'answer'));
 
         if ($question === null || $answer === null) {
             return null;
@@ -104,38 +108,10 @@ class FaqItems
             'id' => data_get($item, 'id'),
             'question' => $question,
             'answer' => $answer,
-            'category' => $this->nullableString(data_get($item, 'category')),
+            'category' => Coerce::nullableString(data_get($item, 'category')),
             'sort_order' => (int) data_get($item, 'sort_order', $index),
-            'is_active' => $this->boolValue(data_get($item, 'is_active', data_get($item, 'active', true)), true),
+            'is_active' => Coerce::bool(data_get($item, 'is_active', data_get($item, 'active', true)), true),
             'position' => $index,
         ];
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
     }
 }

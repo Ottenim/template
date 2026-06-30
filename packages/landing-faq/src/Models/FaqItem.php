@@ -4,6 +4,7 @@ namespace Template\LandingFaq\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingFaq\Config\FaqConfig;
 
 class FaqItem extends Model
 {
@@ -30,7 +31,7 @@ class FaqItem extends Model
 
     public function getTable()
     {
-        return config('landing-faq.database.table', 'lp_faq_items');
+        return FaqConfig::fromConfig()->databaseTable();
     }
 
     public function scopeActive(Builder $query): Builder

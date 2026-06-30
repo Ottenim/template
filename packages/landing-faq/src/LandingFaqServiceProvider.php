@@ -8,6 +8,7 @@ use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\MenuRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
+use Template\LandingFaq\Config\FaqConfig;
 use Template\LandingFaq\Support\FaqItems;
 
 class LandingFaqServiceProvider extends ServiceProvider
@@ -15,6 +16,9 @@ class LandingFaqServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-faq.php', 'landing-faq');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(FaqConfig::class, fn () => FaqConfig::fromConfig());
 
         $this->app->singleton(FaqItems::class);
     }
@@ -49,27 +53,30 @@ class LandingFaqServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(FaqConfig::class);
+
             $modules->register([
                 'name' => 'landing-faq',
                 'label' => 'FAQ',
-                'enabled' => (bool) config('landing-faq.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Configurable FAQ section for landing pages.',
-                'admin_route' => (bool) config('landing-faq.admin.enabled', false) ? 'faq.admin.index' : null,
+                'admin_route' => $config->adminEnabled() ? 'faq.admin.index' : null,
                 'section' => [
                     'component' => 'faq::section',
-                    'enabled' => (bool) config('landing-faq.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });
 
         $this->callAfterResolving(MenuRegistry::class, function (MenuRegistry $menus) {
+            $config = $this->app->make(FaqConfig::class);
+
             $menus->register([
                 'key' => 'landing-faq',
                 'label' => 'FAQ',
                 'route' => 'faq.admin.index',
                 'group' => 'Landing Page',
-                'enabled' => (bool) config('landing-faq.enabled', true)
-                    && (bool) config('landing-faq.admin.enabled', false),
+                'enabled' => $config->enabled() && $config->adminEnabled(),
             ]);
         });
 

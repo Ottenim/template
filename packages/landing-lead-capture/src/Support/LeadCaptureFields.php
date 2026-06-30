@@ -3,6 +3,7 @@
 namespace Template\LandingLeadCapture\Support;
 
 use Template\LandingCore\Support\Coerce;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 
 class LeadCaptureFields
 {
@@ -49,7 +50,7 @@ class LeadCaptureFields
 
     protected function fields(): array
     {
-        return $this->fields ?? config('landing-lead-capture.fields', []);
+        return $this->fields ?? LeadCaptureConfig::fromConfig()->fields();
     }
 
     protected function normalize(string $name, mixed $config): array

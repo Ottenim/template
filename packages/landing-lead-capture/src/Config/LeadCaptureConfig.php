@@ -27,6 +27,16 @@ class LeadCaptureConfig extends ModuleConfig
         return $this->string('variant', 'inline');
     }
 
+    /**
+     * Definição bruta dos campos do formulário; a normalização vive em LeadCaptureFields.
+     *
+     * @return array<string, mixed>
+     */
+    public function fields(): array
+    {
+        return $this->list('fields', []);
+    }
+
     public function routeEnabled(): bool
     {
         return $this->bool('route.enabled', true);

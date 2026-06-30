@@ -22,6 +22,16 @@ class ContactConfig extends ModuleConfig
         return $this->bool('enabled', true);
     }
 
+    /**
+     * Definição bruta dos campos do formulário; a normalização vive em ContactFields.
+     *
+     * @return array<string, mixed>
+     */
+    public function fields(): array
+    {
+        return $this->list('fields', []);
+    }
+
     public function routeEnabled(): bool
     {
         return $this->bool('route.enabled', true);

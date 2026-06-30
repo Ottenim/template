@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingPricing\Config\PricingConfig;
 use Template\LandingPricing\Http\Requests\StorePricingPlanRequest;
 use Template\LandingPricing\Http\Requests\UpdatePricingPlanRequest;
 use Template\LandingPricing\Models\PricingPlan;
@@ -13,25 +15,25 @@ use Template\LandingPricing\Support\PricingUrl;
 
 class PricingPlanAdminController extends Controller
 {
-    public function index(): View
+    public function index(PricingConfig $config): View
     {
         $pricingPlans = PricingPlan::query()
             ->ordered()
-            ->paginate((int) config('landing-pricing.admin.per_page', 15));
+            ->paginate($config->adminPerPage());
 
         return view('landing-pricing::admin.index', [
             'pricingPlans' => $pricingPlans,
         ]);
     }
 
-    public function create(): View
+    public function create(PricingConfig $config): View
     {
         return view('landing-pricing::admin.create', [
             'pricingPlan' => new PricingPlan([
-                'currency' => config('landing-pricing.currency', 'R$'),
-                'billing_period_label' => config('landing-pricing.billing_period_label', '/mes'),
-                'cta_label' => config('landing-pricing.cta.default_label', 'Escolher plano'),
-                'cta_url' => config('landing-pricing.cta.default_url', '#contact'),
+                'currency' => $config->currency(),
+                'billing_period_label' => $config->billingPeriodLabel(),
+                'cta_label' => $config->ctaDefaultLabel(),
+                'cta_url' => $config->ctaDefaultUrl(),
                 'features' => [],
                 'sort_order' => 0,
                 'is_featured' => false,
@@ -78,15 +80,15 @@ class PricingPlanAdminController extends Controller
     {
         return [
             ...$request->validated(),
-            'description' => $this->nullableString($request->input('description')),
-            'price' => $this->nullableString($request->input('price')),
-            'currency' => $this->nullableString($request->input('currency')),
-            'billing_period_label' => $this->nullableString($request->input('billing_period_label')),
+            'description' => Coerce::nullableString($request->input('description')),
+            'price' => Coerce::nullableString($request->input('price')),
+            'currency' => Coerce::nullableString($request->input('currency')),
+            'billing_period_label' => Coerce::nullableString($request->input('billing_period_label')),
             'features' => $this->featuresArray($request->input('features')),
-            'cta_label' => $this->nullableString($request->input('cta_label')),
+            'cta_label' => Coerce::nullableString($request->input('cta_label')),
             'cta_url' => PricingUrl::normalize($request->input('cta_url')),
-            'note' => $this->nullableString($request->input('note')),
-            'badge' => $this->nullableString($request->input('badge')),
+            'note' => Coerce::nullableString($request->input('note')),
+            'badge' => Coerce::nullableString($request->input('badge')),
             'sort_order' => (int) ($request->input('sort_order') ?? 0),
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active'),
@@ -97,7 +99,7 @@ class PricingPlanAdminController extends Controller
     {
         if (is_array($value)) {
             return collect($value)
-                ->map(fn (mixed $feature) => $this->nullableString($feature))
+                ->map(fn (mixed $feature) => Coerce::nullableString($feature))
                 ->filter()
                 ->values()
                 ->all();
@@ -108,20 +110,9 @@ class PricingPlanAdminController extends Controller
         }
 
         return collect(preg_split('/\r\n|\r|\n/', $value) ?: [])
-            ->map(fn (mixed $feature) => $this->nullableString($feature))
+            ->map(fn (mixed $feature) => Coerce::nullableString($feature))
             ->filter()
             ->values()
             ->all();
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

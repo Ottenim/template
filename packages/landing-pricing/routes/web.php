@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Template\LandingPricing\Config\PricingConfig;
 use Template\LandingPricing\Http\Controllers\PricingPlanAdminController;
 
-if ((bool) config('landing-pricing.enabled', true) && (bool) config('landing-pricing.admin.enabled', false)) {
-    Route::middleware(array_filter((array) config('landing-pricing.admin.middleware', ['web', 'auth'])))
-        ->prefix(config('landing-pricing.admin.prefix', 'admin/pricing'))
+$config = PricingConfig::fromConfig();
+
+if ($config->enabled() && $config->adminEnabled()) {
+    Route::middleware($config->adminMiddleware())
+        ->prefix($config->adminPrefix())
         ->name('pricing.admin.')
         ->group(function () {
             Route::get('/', [PricingPlanAdminController::class, 'index'])->name('index');

@@ -4,6 +4,8 @@ namespace Template\LandingPricing\Support;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingPricing\Config\PricingConfig;
 use Template\LandingPricing\Models\PricingPlan;
 use Throwable;
 
@@ -38,7 +40,7 @@ class PricingPlans
 
     protected function configuredPlans(): Collection
     {
-        $configured = collect(config('landing-pricing.plans', []));
+        $configured = collect(PricingConfig::fromConfig()->plans());
 
         if ($configured->isNotEmpty()) {
             return $configured;
@@ -49,11 +51,13 @@ class PricingPlans
 
     protected function databasePlans(): Collection
     {
-        if (! (bool) config('landing-pricing.database.enabled', true)) {
+        $config = PricingConfig::fromConfig();
+
+        if (! $config->databaseEnabled()) {
             return collect();
         }
 
-        $table = config('landing-pricing.database.table', 'lp_pricing_plans');
+        $table = $config->databaseTable();
 
         try {
             if (! Schema::hasTable($table)) {
@@ -68,32 +72,33 @@ class PricingPlans
 
     protected function normalizePlan(mixed $plan, int $index): ?array
     {
-        $name = $this->nullableString(data_get($plan, 'name'));
+        $name = Coerce::nullableString(data_get($plan, 'name'));
 
         if ($name === null) {
             return null;
         }
 
-        $featured = $this->boolValue(data_get($plan, 'is_featured', data_get($plan, 'featured', false)), false);
-        $badge = $this->nullableString(data_get($plan, 'badge'));
+        $config = PricingConfig::fromConfig();
+        $featured = Coerce::bool(data_get($plan, 'is_featured', data_get($plan, 'featured', false)), false);
+        $badge = Coerce::nullableString(data_get($plan, 'badge'));
 
         return [
             'id' => data_get($plan, 'id'),
             'name' => $name,
-            'description' => $this->nullableString(data_get($plan, 'description')),
-            'price' => $this->nullableString(data_get($plan, 'price')),
-            'currency' => $this->nullableString(data_get($plan, 'currency', config('landing-pricing.currency'))),
-            'billing_period_label' => $this->nullableString(
-                data_get($plan, 'billing_period_label', data_get($plan, 'period', config('landing-pricing.billing_period_label'))),
+            'description' => Coerce::nullableString(data_get($plan, 'description')),
+            'price' => Coerce::nullableString(data_get($plan, 'price')),
+            'currency' => Coerce::nullableString(data_get($plan, 'currency', $config->currency())),
+            'billing_period_label' => Coerce::nullableString(
+                data_get($plan, 'billing_period_label', data_get($plan, 'period', $config->billingPeriodLabel())),
             ),
             'features' => $this->featuresValue(data_get($plan, 'features', [])),
-            'cta_label' => $this->nullableString(data_get($plan, 'cta_label', config('landing-pricing.cta.default_label'))),
-            'cta_url' => PricingUrl::normalize(data_get($plan, 'cta_url', config('landing-pricing.cta.default_url'))),
-            'note' => $this->nullableString(data_get($plan, 'note')),
-            'badge' => $badge ?: ($featured ? $this->nullableString(config('landing-pricing.featured_label')) : null),
+            'cta_label' => Coerce::nullableString(data_get($plan, 'cta_label', $config->ctaDefaultLabel())),
+            'cta_url' => PricingUrl::normalize(data_get($plan, 'cta_url', $config->ctaDefaultUrl())),
+            'note' => Coerce::nullableString(data_get($plan, 'note')),
+            'badge' => $badge ?: ($featured ? $config->featuredLabel() : null),
             'sort_order' => (int) data_get($plan, 'sort_order', $index),
             'is_featured' => $featured,
-            'is_active' => $this->boolValue(data_get($plan, 'is_active', data_get($plan, 'active', true)), true),
+            'is_active' => Coerce::bool(data_get($plan, 'is_active', data_get($plan, 'active', true)), true),
             'position' => $index,
         ];
     }
@@ -111,41 +116,13 @@ class PricingPlans
         return collect($value)
             ->map(function (mixed $feature) {
                 if (is_array($feature) || is_object($feature)) {
-                    return $this->nullableString(data_get($feature, 'text', data_get($feature, 'label')));
+                    return Coerce::nullableString(data_get($feature, 'text', data_get($feature, 'label')));
                 }
 
-                return $this->nullableString($feature);
+                return Coerce::nullableString($feature);
             })
             ->filter()
             ->values()
             ->all();
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

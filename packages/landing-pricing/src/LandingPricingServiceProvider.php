@@ -8,6 +8,7 @@ use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\MenuRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
+use Template\LandingPricing\Config\PricingConfig;
 use Template\LandingPricing\Support\PricingPlans;
 
 class LandingPricingServiceProvider extends ServiceProvider
@@ -15,6 +16,9 @@ class LandingPricingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-pricing.php', 'landing-pricing');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(PricingConfig::class, fn () => PricingConfig::fromConfig());
 
         $this->app->singleton(PricingPlans::class);
     }
@@ -49,27 +53,30 @@ class LandingPricingServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(PricingConfig::class);
+
             $modules->register([
                 'name' => 'landing-pricing',
                 'label' => 'Pricing',
-                'enabled' => (bool) config('landing-pricing.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Configurable pricing plans section for landing pages.',
-                'admin_route' => (bool) config('landing-pricing.admin.enabled', false) ? 'pricing.admin.index' : null,
+                'admin_route' => $config->adminEnabled() ? 'pricing.admin.index' : null,
                 'section' => [
                     'component' => 'pricing::section',
-                    'enabled' => (bool) config('landing-pricing.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });
 
         $this->callAfterResolving(MenuRegistry::class, function (MenuRegistry $menus) {
+            $config = $this->app->make(PricingConfig::class);
+
             $menus->register([
                 'key' => 'landing-pricing',
                 'label' => 'Pricing',
                 'route' => 'pricing.admin.index',
                 'group' => 'Landing Page',
-                'enabled' => (bool) config('landing-pricing.enabled', true)
-                    && (bool) config('landing-pricing.admin.enabled', false),
+                'enabled' => $config->enabled() && $config->adminEnabled(),
             ]);
         });
 

@@ -4,6 +4,7 @@ namespace Template\LandingPricing\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingPricing\Config\PricingConfig;
 
 class PricingPlan extends Model
 {
@@ -42,7 +43,7 @@ class PricingPlan extends Model
 
     public function getTable()
     {
-        return config('landing-pricing.database.table', 'lp_pricing_plans');
+        return PricingConfig::fromConfig()->databaseTable();
     }
 
     public function scopeActive(Builder $query): Builder

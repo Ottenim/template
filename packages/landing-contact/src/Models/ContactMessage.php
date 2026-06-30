@@ -3,6 +3,7 @@
 namespace Template\LandingContact\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingContact\Config\ContactConfig;
 
 class ContactMessage extends Model
 {
@@ -31,6 +32,6 @@ class ContactMessage extends Model
 
     public function getTable(): string
     {
-        return config('landing-contact.database.table', 'lp_contact_messages');
+        return ContactConfig::fromConfig()->databaseTable();
     }
 }

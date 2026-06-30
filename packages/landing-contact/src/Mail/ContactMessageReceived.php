@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Template\LandingContact\Config\ContactConfig;
 use Template\LandingContact\Models\ContactMessage;
 
 class ContactMessageReceived extends Mailable implements ShouldQueue
@@ -29,7 +30,7 @@ class ContactMessageReceived extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config('landing-contact.send_email.subject', 'Nova mensagem de contato'),
+            subject: ContactConfig::fromConfig()->emailSubject(),
         );
     }
 

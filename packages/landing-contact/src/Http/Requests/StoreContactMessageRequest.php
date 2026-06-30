@@ -4,6 +4,7 @@ namespace Template\LandingContact\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Template\LandingContact\Config\ContactConfig;
 use Template\LandingContact\Support\ContactFields;
 
 class StoreContactMessageRequest extends FormRequest
@@ -15,6 +16,7 @@ class StoreContactMessageRequest extends FormRequest
 
     public function rules(): array
     {
+        $config = app(ContactConfig::class);
         $fields = app(ContactFields::class);
         $rules = [
             'source_page' => ['nullable', 'string', 'max:255'],
@@ -31,14 +33,14 @@ class StoreContactMessageRequest extends FormRequest
             $rules[$field] = $this->rulesForField($field, $fields->get($field));
         }
 
-        if ((bool) config('landing-contact.privacy_consent.enabled', true)) {
-            $rules['privacy_consent'] = (bool) config('landing-contact.privacy_consent.required', true)
+        if ($config->privacyConsentEnabled()) {
+            $rules['privacy_consent'] = $config->privacyConsentRequired()
                 ? ['accepted']
                 : ['nullable'];
         }
 
-        if ((bool) config('landing-contact.anti_spam.honeypot', true)) {
-            $rules[$this->honeypotField()] = ['prohibited'];
+        if ($config->honeypotEnabled()) {
+            $rules[$config->honeypotField()] = ['prohibited'];
         }
 
         return $rules;
@@ -102,12 +104,5 @@ class StoreContactMessageRequest extends FormRequest
         }
 
         return [Rule::in(array_column($field['options'], 'value'))];
-    }
-
-    protected function honeypotField(): string
-    {
-        $field = trim((string) config('landing-contact.anti_spam.honeypot_field', 'website'));
-
-        return $field === '' ? 'website' : $field;
     }
 }

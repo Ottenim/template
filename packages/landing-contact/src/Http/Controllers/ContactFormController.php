@@ -7,27 +7,28 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Template\LandingContact\Config\ContactConfig;
 use Template\LandingContact\Http\Requests\StoreContactMessageRequest;
 use Template\LandingContact\Mail\ContactMessageReceived;
 use Template\LandingContact\Models\ContactMessage;
 
 class ContactFormController extends Controller
 {
-    public function __invoke(StoreContactMessageRequest $request): RedirectResponse
+    public function __invoke(StoreContactMessageRequest $request, ContactConfig $config): RedirectResponse
     {
         $data = $request->validatedContactData();
         $contactMessage = null;
 
-        if ((bool) config('landing-contact.save_to_database', true)) {
+        if ($config->saveToDatabase()) {
             $contactMessage = ContactMessage::query()->create([
                 ...$data,
-                'metadata' => $this->metadata(),
+                'metadata' => $this->metadata($config),
                 'ip_address' => $request->ip(),
                 'user_agent' => Str::limit((string) $request->userAgent(), 1000, ''),
             ]);
         }
 
-        $emailQueued = $this->sendNotification($data, $contactMessage);
+        $emailQueued = $this->sendNotification($config, $data, $contactMessage);
 
         Log::info('contact.submitted', [
             'contact_message_id' => $contactMessage?->id,
@@ -35,25 +36,25 @@ class ContactFormController extends Controller
             'email_queued' => $emailQueued,
         ]);
 
-        $response = config('landing-contact.redirect_after_submit')
-            ? redirect()->to(config('landing-contact.redirect_after_submit'))
+        $response = $config->redirectAfterSubmit()
+            ? redirect()->to($config->redirectAfterSubmit())
             : back();
 
         return $response->with([
-            'landing_contact_success' => config('landing-contact.messages.success'),
-            'landing_contact_conversion' => $this->conversionPayload(),
+            'landing_contact_success' => $config->successMessage(),
+            'landing_contact_conversion' => $this->conversionPayload($config),
         ]);
     }
 
-    protected function sendNotification(array $data, ?ContactMessage $contactMessage): bool
+    protected function sendNotification(ContactConfig $config, array $data, ?ContactMessage $contactMessage): bool
     {
-        if (! (bool) config('landing-contact.send_email.enabled', true)) {
+        if (! $config->emailEnabled()) {
             return false;
         }
 
-        $recipient = trim((string) config('landing-contact.send_email.to'));
+        $recipient = $config->emailRecipient();
 
-        if ($recipient === '') {
+        if ($recipient === null) {
             return false;
         }
 
@@ -62,22 +63,22 @@ class ContactFormController extends Controller
         return true;
     }
 
-    protected function metadata(): array
+    protected function metadata(ContactConfig $config): array
     {
         return [
-            'tracking_enabled' => (bool) config('landing-contact.tracking.enabled', false),
-            'tracking_event' => config('landing-contact.tracking.event_name', 'contact_form_submit'),
+            'tracking_enabled' => $config->trackingEnabled(),
+            'tracking_event' => $config->trackingEventName(),
         ];
     }
 
-    protected function conversionPayload(): ?array
+    protected function conversionPayload(ContactConfig $config): ?array
     {
-        if (! (bool) config('landing-contact.tracking.enabled', false)) {
+        if (! $config->trackingEnabled()) {
             return null;
         }
 
         return [
-            'event' => config('landing-contact.tracking.event_name', 'contact_form_submit'),
+            'event' => $config->trackingEventName(),
         ];
     }
 }

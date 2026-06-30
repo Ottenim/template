@@ -4,6 +4,7 @@ namespace Template\LandingContact;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Template\LandingContact\Config\ContactConfig;
 use Template\LandingContact\Support\ContactFields;
 use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
@@ -14,6 +15,10 @@ class LandingContactServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-contact.php', 'landing-contact');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução,
+        // preservando o comportamento "config ao vivo" do código anterior.
+        $this->app->bind(ContactConfig::class, fn () => ContactConfig::fromConfig());
 
         $this->app->bind(ContactFields::class, fn () => new ContactFields);
     }
@@ -48,14 +53,16 @@ class LandingContactServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(ContactConfig::class);
+
             $modules->register([
                 'name' => 'landing-contact',
                 'label' => 'Contact Form',
-                'enabled' => (bool) config('landing-contact.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Configurable contact form for landing page leads.',
                 'section' => [
                     'component' => 'contact::section',
-                    'enabled' => (bool) config('landing-contact.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });

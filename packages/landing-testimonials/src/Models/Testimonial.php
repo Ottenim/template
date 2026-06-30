@@ -4,6 +4,7 @@ namespace Template\LandingTestimonials\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 
 class Testimonial extends Model
 {
@@ -38,7 +39,7 @@ class Testimonial extends Model
 
     public function getTable()
     {
-        return config('landing-testimonials.database.table', 'lp_testimonials');
+        return TestimonialsConfig::fromConfig()->databaseTable();
     }
 
     public function scopeActive(Builder $query): Builder

@@ -6,17 +6,19 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 use Template\LandingTestimonials\Http\Requests\StoreTestimonialRequest;
 use Template\LandingTestimonials\Http\Requests\UpdateTestimonialRequest;
 use Template\LandingTestimonials\Models\Testimonial;
 
 class TestimonialAdminController extends Controller
 {
-    public function index(): View
+    public function index(TestimonialsConfig $config): View
     {
         $testimonials = Testimonial::query()
             ->ordered()
-            ->paginate((int) config('landing-testimonials.admin.per_page', 15));
+            ->paginate($config->adminPerPage());
 
         return view('landing-testimonials::admin.index', [
             'testimonials' => $testimonials,
@@ -72,26 +74,15 @@ class TestimonialAdminController extends Controller
     {
         return [
             ...$request->validated(),
-            'role' => $this->nullableString($request->input('role')),
-            'company' => $this->nullableString($request->input('company')),
-            'avatar' => $this->nullableString($request->input('avatar')),
-            'logo' => $this->nullableString($request->input('logo')),
+            'role' => Coerce::nullableString($request->input('role')),
+            'company' => Coerce::nullableString($request->input('company')),
+            'avatar' => Coerce::nullableString($request->input('avatar')),
+            'logo' => Coerce::nullableString($request->input('logo')),
             'rating' => $this->nullableInteger($request->input('rating')),
             'sort_order' => (int) ($request->input('sort_order') ?? 0),
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active'),
         ];
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 
     protected function nullableInteger(mixed $value): ?int

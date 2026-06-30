@@ -5,6 +5,8 @@ namespace Template\LandingTestimonials\View\Components;
 use Illuminate\Support\Collection;
 use Illuminate\View\Component;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 use Template\LandingTestimonials\Support\Testimonials;
 
 class Section extends Component
@@ -45,21 +47,23 @@ class Section extends Component
         mixed $limit = null,
         mixed $enabled = null,
     ) {
-        $this->enabled = $this->boolValue(config('landing-testimonials.enabled', true), true)
-            && $this->boolValue(config('landing-testimonials.section.enabled', true), true)
-            && $this->boolValue($enabled, true);
+        $config = app(TestimonialsConfig::class);
 
-        $this->eyebrow = $this->nullableString($eyebrow ?? config('landing-testimonials.section.eyebrow'));
-        $this->title = $this->nullableString($title ?? config('landing-testimonials.section.title'));
-        $this->subtitle = $this->nullableString($subtitle ?? config('landing-testimonials.section.subtitle'));
-        $this->layout = $this->layoutValue($layout ?? config('landing-testimonials.layout', 'grid'));
-        $this->columns = $this->columnsValue($columns ?? config('landing-testimonials.columns', 3));
-        $this->showAvatar = $this->boolValue($showAvatar, (bool) config('landing-testimonials.show_avatar', true));
-        $this->showRating = $this->boolValue($showRating, (bool) config('landing-testimonials.show_rating', false));
-        $this->showCompany = $this->boolValue($showCompany, (bool) config('landing-testimonials.show_company', true));
-        $this->showLogo = $this->boolValue($showLogo, (bool) config('landing-testimonials.show_logo', true));
+        $this->enabled = $config->enabled()
+            && $config->sectionEnabled()
+            && Coerce::bool($enabled, true);
 
-        $this->testimonials = app(Testimonials::class)->publicItems($items, $this->limitValue($limit));
+        $this->eyebrow = Coerce::nullableString($eyebrow ?? $config->sectionEyebrow());
+        $this->title = Coerce::nullableString($title ?? $config->sectionTitle());
+        $this->subtitle = Coerce::nullableString($subtitle ?? $config->sectionSubtitle());
+        $this->layout = $this->layoutValue($layout ?? $config->layout());
+        $this->columns = $this->columnsValue($columns ?? $config->columns());
+        $this->showAvatar = Coerce::bool($showAvatar, $config->showAvatar());
+        $this->showRating = Coerce::bool($showRating, $config->showRating());
+        $this->showCompany = Coerce::bool($showCompany, $config->showCompany());
+        $this->showLogo = Coerce::bool($showLogo, $config->showLogo());
+
+        $this->testimonials = app(Testimonials::class)->publicItems($items, $this->limitValue($limit, $config));
     }
 
     public function shouldRender(): bool
@@ -74,7 +78,7 @@ class Section extends Component
 
     protected function layoutValue(mixed $value): string
     {
-        $layout = $this->nullableString($value) ?? 'grid';
+        $layout = Coerce::string($value, 'grid');
 
         return in_array($layout, ['grid', 'featured', 'carousel', 'list'], true) ? $layout : 'grid';
     }
@@ -86,9 +90,9 @@ class Section extends Component
         return max(1, min(4, $columns));
     }
 
-    protected function limitValue(mixed $value): ?int
+    protected function limitValue(mixed $value, TestimonialsConfig $config): ?int
     {
-        $value ??= config('landing-testimonials.limit');
+        $value ??= $config->limit();
 
         if ($value === null || $value === '') {
             return null;
@@ -97,33 +101,5 @@ class Section extends Component
         $limit = (int) $value;
 
         return $limit > 0 ? $limit : null;
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

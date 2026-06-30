@@ -4,6 +4,8 @@ namespace Template\LandingTestimonials\Support;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 use Template\LandingTestimonials\Models\Testimonial;
 use Throwable;
 
@@ -39,7 +41,7 @@ class Testimonials
 
     protected function configuredItems(): Collection
     {
-        $configured = collect(config('landing-testimonials.items', []));
+        $configured = collect(TestimonialsConfig::fromConfig()->items());
 
         if ($configured->isNotEmpty()) {
             return $configured;
@@ -50,11 +52,13 @@ class Testimonials
 
     protected function databaseItems(): Collection
     {
-        if (! (bool) config('landing-testimonials.database.enabled', true)) {
+        $config = TestimonialsConfig::fromConfig();
+
+        if (! $config->databaseEnabled()) {
             return collect();
         }
 
-        $table = config('landing-testimonials.database.table', 'lp_testimonials');
+        $table = $config->databaseTable();
 
         try {
             if (! Schema::hasTable($table)) {
@@ -69,8 +73,8 @@ class Testimonials
 
     protected function normalizeItem(mixed $item, int $index): ?array
     {
-        $name = $this->nullableString(data_get($item, 'name'));
-        $text = $this->nullableString(data_get($item, 'text'));
+        $name = Coerce::nullableString(data_get($item, 'name'));
+        $text = Coerce::nullableString(data_get($item, 'text'));
 
         if ($name === null || $text === null) {
             return null;
@@ -80,14 +84,14 @@ class Testimonials
             'id' => data_get($item, 'id'),
             'name' => $name,
             'text' => $text,
-            'role' => $this->nullableString(data_get($item, 'role')),
-            'company' => $this->nullableString(data_get($item, 'company')),
-            'avatar' => $this->nullableString(data_get($item, 'avatar')),
-            'logo' => $this->nullableString(data_get($item, 'logo')),
+            'role' => Coerce::nullableString(data_get($item, 'role')),
+            'company' => Coerce::nullableString(data_get($item, 'company')),
+            'avatar' => Coerce::nullableString(data_get($item, 'avatar')),
+            'logo' => Coerce::nullableString(data_get($item, 'logo')),
             'rating' => $this->ratingValue(data_get($item, 'rating')),
             'sort_order' => (int) data_get($item, 'sort_order', $index),
-            'is_featured' => $this->boolValue(data_get($item, 'is_featured', data_get($item, 'featured', false)), false),
-            'is_active' => $this->boolValue(data_get($item, 'is_active', data_get($item, 'active', true)), true),
+            'is_featured' => Coerce::bool(data_get($item, 'is_featured', data_get($item, 'featured', false)), false),
+            'is_active' => Coerce::bool(data_get($item, 'is_active', data_get($item, 'active', true)), true),
             'position' => $index,
         ];
     }
@@ -101,33 +105,5 @@ class Testimonials
         $rating = (int) $value;
 
         return $rating >= 1 && $rating <= 5 ? $rating : null;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
     }
 }

@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 use Template\LandingTestimonials\Http\Controllers\TestimonialAdminController;
 
-if ((bool) config('landing-testimonials.enabled', true) && (bool) config('landing-testimonials.admin.enabled', false)) {
-    Route::middleware(array_filter((array) config('landing-testimonials.admin.middleware', ['web', 'auth'])))
-        ->prefix(config('landing-testimonials.admin.prefix', 'admin/testimonials'))
+$config = TestimonialsConfig::fromConfig();
+
+if ($config->enabled() && $config->adminEnabled()) {
+    Route::middleware($config->adminMiddleware())
+        ->prefix($config->adminPrefix())
         ->name('testimonials.admin.')
         ->group(function () {
             Route::get('/', [TestimonialAdminController::class, 'index'])->name('index');

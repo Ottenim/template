@@ -8,6 +8,7 @@ use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\MenuRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
+use Template\LandingTestimonials\Config\TestimonialsConfig;
 use Template\LandingTestimonials\Support\Testimonials;
 
 class LandingTestimonialsServiceProvider extends ServiceProvider
@@ -15,6 +16,9 @@ class LandingTestimonialsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-testimonials.php', 'landing-testimonials');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(TestimonialsConfig::class, fn () => TestimonialsConfig::fromConfig());
 
         $this->app->singleton(Testimonials::class);
     }
@@ -49,27 +53,30 @@ class LandingTestimonialsServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(TestimonialsConfig::class);
+
             $modules->register([
                 'name' => 'landing-testimonials',
                 'label' => 'Testimonials',
-                'enabled' => (bool) config('landing-testimonials.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Configurable testimonials section for landing pages.',
-                'admin_route' => (bool) config('landing-testimonials.admin.enabled', false) ? 'testimonials.admin.index' : null,
+                'admin_route' => $config->adminEnabled() ? 'testimonials.admin.index' : null,
                 'section' => [
                     'component' => 'testimonials::section',
-                    'enabled' => (bool) config('landing-testimonials.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });
 
         $this->callAfterResolving(MenuRegistry::class, function (MenuRegistry $menus) {
+            $config = $this->app->make(TestimonialsConfig::class);
+
             $menus->register([
                 'key' => 'landing-testimonials',
                 'label' => 'Testimonials',
                 'route' => 'testimonials.admin.index',
                 'group' => 'Landing Page',
-                'enabled' => (bool) config('landing-testimonials.enabled', true)
-                    && (bool) config('landing-testimonials.admin.enabled', false),
+                'enabled' => $config->enabled() && $config->adminEnabled(),
             ]);
         });
 

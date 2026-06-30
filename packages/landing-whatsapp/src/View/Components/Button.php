@@ -4,6 +4,8 @@ namespace Template\LandingWhatsapp\View\Components;
 
 use Illuminate\View\Component;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingWhatsapp\Config\WhatsappConfig;
 use Template\LandingWhatsapp\Support\WhatsappUrl;
 
 class Button extends Component
@@ -51,43 +53,29 @@ class Button extends Component
         ?string $trackingEvent = null,
         mixed $useBrandColor = null,
     ) {
-        $this->enabled = $this->boolValue(config('landing-whatsapp.enabled', true), true)
-            && $this->boolValue($enabled, true);
+        $config = app(WhatsappConfig::class);
 
-        $this->label = $this->stringValue($label, config('landing-whatsapp.button.label', 'Falar no WhatsApp'));
-        $this->showText = $this->boolValue($showText, (bool) config('landing-whatsapp.button.show_text', true));
-        $this->showIcon = $this->boolValue($showIcon, (bool) config('landing-whatsapp.button.show_icon', true));
-        $this->tooltip = $this->nullableString($tooltip ?? config('landing-whatsapp.button.tooltip'));
-        $this->ariaLabel = $this->stringValue(
-            $ariaLabel,
-            config('landing-whatsapp.button.aria_label', $this->label),
-        );
-        $this->trackingEnabled = $this->boolValue($tracking, (bool) config('landing-whatsapp.tracking.enabled', false));
-        $this->trackingEvent = $this->stringValue(
-            $trackingEvent,
-            config('landing-whatsapp.tracking.event_name', 'whatsapp_click'),
-        );
-        $this->useBrandColor = $this->boolValue(
-            $useBrandColor,
-            (bool) config('landing-whatsapp.style.use_brand_color', false),
-        );
-        $this->brandColor = $this->cssColor(
-            config('landing-whatsapp.style.brand_color', '#25D366'),
-            '#25D366',
-        );
-        $this->brandTextColor = $this->cssColor(
-            config('landing-whatsapp.style.brand_text_color', '#ffffff'),
-            '#ffffff',
-        );
+        $this->enabled = $config->enabled() && Coerce::bool($enabled, true);
+
+        $this->label = Coerce::string($label, $config->buttonLabel());
+        $this->showText = Coerce::bool($showText, $config->buttonShowText());
+        $this->showIcon = Coerce::bool($showIcon, $config->buttonShowIcon());
+        $this->tooltip = Coerce::nullableString($tooltip ?? $config->buttonTooltip());
+        $this->ariaLabel = Coerce::string($ariaLabel, $config->buttonAriaLabel() ?? $this->label);
+        $this->trackingEnabled = Coerce::bool($tracking, $config->trackingEnabled());
+        $this->trackingEvent = Coerce::string($trackingEvent, $config->trackingEventName());
+        $this->useBrandColor = Coerce::bool($useBrandColor, $config->styleUseBrandColor());
+        $this->brandColor = $this->cssColor($config->styleBrandColor(), '#25D366');
+        $this->brandTextColor = $this->cssColor($config->styleBrandTextColor(), '#ffffff');
         $this->style = $this->useBrandColor
             ? "--lp-whatsapp-brand-color: {$this->brandColor}; --lp-whatsapp-brand-text-color: {$this->brandTextColor};"
             : '';
 
-        $phone = $phone ?? config('landing-whatsapp.phone');
-        $message = $message ?? config('landing-whatsapp.message');
-        $this->url = $this->nullableString($url) ?? app(WhatsappUrl::class)->make($phone, $message);
+        $phone = $phone ?? $config->phone();
+        $message = $message ?? $config->message();
+        $this->url = Coerce::nullableString($url) ?? app(WhatsappUrl::class)->make($phone, $message);
 
-        $visibility = $this->normalizeVisibility($visibility ?? config('landing-whatsapp.visibility', 'all'));
+        $visibility = $this->normalizeVisibility($visibility ?? $config->visibility());
         $this->buttonClasses = array_filter([
             'lp-whatsapp-button',
             'lp-button',
@@ -109,42 +97,9 @@ class Button extends Component
         return view('landing-whatsapp::components.button');
     }
 
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
-    }
-
-    protected function stringValue(mixed $value, mixed $default): string
-    {
-        return $this->nullableString($value) ?? $this->nullableString($default) ?? '';
-    }
-
     protected function cssColor(mixed $value, string $default): string
     {
-        $value = $this->nullableString($value) ?? $default;
+        $value = Coerce::nullableString($value) ?? $default;
 
         if (! preg_match('/^[#a-zA-Z0-9\s(),.%+-]+$/', $value)) {
             return $default;

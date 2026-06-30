@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
+use Template\LandingWhatsapp\Config\WhatsappConfig;
 use Template\LandingWhatsapp\Support\WhatsappUrl;
 
 class LandingWhatsappServiceProvider extends ServiceProvider
@@ -14,6 +15,9 @@ class LandingWhatsappServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-whatsapp.php', 'landing-whatsapp');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(WhatsappConfig::class, fn () => WhatsappConfig::fromConfig());
 
         $this->app->singleton(WhatsappUrl::class);
     }
@@ -42,14 +46,16 @@ class LandingWhatsappServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(WhatsappConfig::class);
+
             $modules->register([
                 'name' => 'landing-whatsapp',
                 'label' => 'WhatsApp CTA',
-                'enabled' => (bool) config('landing-whatsapp.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Configurable WhatsApp call to action for landing pages.',
                 'section' => [
                     'component' => 'whatsapp::section',
-                    'enabled' => (bool) config('landing-whatsapp.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });

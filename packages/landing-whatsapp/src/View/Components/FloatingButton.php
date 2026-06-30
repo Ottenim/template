@@ -3,6 +3,8 @@
 namespace Template\LandingWhatsapp\View\Components;
 
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingWhatsapp\Config\WhatsappConfig;
 
 class FloatingButton extends Button
 {
@@ -31,26 +33,28 @@ class FloatingButton extends Button
         ?string $position = null,
         mixed $mobileBar = null,
     ) {
+        $config = app(WhatsappConfig::class);
+
         parent::__construct(
             phone: $phone,
             message: $message,
             url: $url,
             label: $label,
-            showText: $showText ?? config('landing-whatsapp.floating.show_text', false),
-            showIcon: $showIcon ?? config('landing-whatsapp.floating.show_icon', true),
-            tooltip: $tooltip ?? config('landing-whatsapp.floating.tooltip'),
+            showText: $showText ?? $config->floatingShowText(),
+            showIcon: $showIcon ?? $config->floatingShowIcon(),
+            tooltip: $tooltip ?? $config->floatingTooltip(),
             ariaLabel: $ariaLabel,
             enabled: $enabled,
-            visibility: $visibility ?? config('landing-whatsapp.floating.visibility', 'all'),
+            visibility: $visibility ?? $config->floatingVisibility(),
             tracking: $tracking,
             trackingEvent: $trackingEvent,
             useBrandColor: $useBrandColor,
         );
 
-        $this->floatingEnabled = $this->boolValue(config('landing-whatsapp.floating.enabled', true), true);
-        $this->position = $this->normalizePosition($position ?? config('landing-whatsapp.floating.position', 'bottom-right'));
-        $this->mobileBar = $this->boolValue($mobileBar, (bool) config('landing-whatsapp.floating.mobile_bar', false));
-        $visibility = $this->normalizeVisibility($visibility ?? config('landing-whatsapp.floating.visibility', 'all'));
+        $this->floatingEnabled = $config->floatingEnabled();
+        $this->position = $this->normalizePosition($position ?? $config->floatingPosition());
+        $this->mobileBar = Coerce::bool($mobileBar, $config->floatingMobileBar());
+        $visibility = $this->normalizeVisibility($visibility ?? $config->floatingVisibility());
 
         $this->buttonClasses[] = 'lp-whatsapp-floating-button';
         $this->wrapperClasses = array_filter([

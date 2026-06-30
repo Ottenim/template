@@ -3,6 +3,7 @@
 namespace Template\LandingLeadCapture\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 
 class Lead extends Model
 {
@@ -33,6 +34,6 @@ class Lead extends Model
 
     public function getTable(): string
     {
-        return config('landing-lead-capture.database.table', 'lp_leads');
+        return LeadCaptureConfig::fromConfig()->databaseTable();
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 use Template\LandingLeadCapture\Models\Lead;
 
 class LeadCaptured extends Mailable implements ShouldQueue
@@ -29,7 +30,7 @@ class LeadCaptured extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config('landing-lead-capture.send_email.subject', 'Novo lead capturado'),
+            subject: LeadCaptureConfig::fromConfig()->emailSubject(),
         );
     }
 

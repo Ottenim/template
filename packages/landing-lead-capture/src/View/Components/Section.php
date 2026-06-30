@@ -4,6 +4,8 @@ namespace Template\LandingLeadCapture\View\Components;
 
 use Illuminate\View\Component;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 
 class Section extends Component
 {
@@ -39,18 +41,20 @@ class Section extends Component
         ?string $tag = null,
         mixed $enabled = null,
     ) {
-        $this->enabled = $this->boolValue(config('landing-lead-capture.enabled', true), true)
-            && $this->boolValue(config('landing-lead-capture.section.enabled', true), true)
-            && $this->boolValue($enabled, true);
-        $this->eyebrow = $this->nullableString($eyebrow ?? config('landing-lead-capture.section.eyebrow'));
-        $this->title = $this->nullableString($title ?? config('landing-lead-capture.cta.title'));
-        $this->subtitle = $this->nullableString($subtitle ?? config('landing-lead-capture.cta.subtitle'));
-        $this->benefit = $this->nullableString($benefit ?? config('landing-lead-capture.section.benefit'));
-        $this->buttonLabel = $this->nullableString($buttonLabel ?? config('landing-lead-capture.cta.button_label'));
-        $this->variant = $this->variantValue($variant ?? config('landing-lead-capture.variant', 'inline'));
-        $this->source = $this->nullableString($source ?? config('landing-lead-capture.lead.source'));
-        $this->campaign = $this->nullableString($campaign ?? config('landing-lead-capture.lead.campaign'));
-        $this->tag = $this->nullableString($tag ?? config('landing-lead-capture.lead.tag'));
+        $config = app(LeadCaptureConfig::class);
+
+        $this->enabled = $config->enabled()
+            && $config->sectionEnabled()
+            && Coerce::bool($enabled, true);
+        $this->eyebrow = Coerce::nullableString($eyebrow ?? $config->sectionEyebrow());
+        $this->title = Coerce::nullableString($title ?? $config->ctaTitle());
+        $this->subtitle = Coerce::nullableString($subtitle ?? $config->ctaSubtitle());
+        $this->benefit = Coerce::nullableString($benefit ?? $config->sectionBenefit());
+        $this->buttonLabel = Coerce::nullableString($buttonLabel ?? $config->ctaButtonLabel());
+        $this->variant = $this->variantValue($variant ?? $config->variant());
+        $this->source = Coerce::nullableString($source ?? $config->leadSource());
+        $this->campaign = Coerce::nullableString($campaign ?? $config->leadCampaign());
+        $this->tag = Coerce::nullableString($tag ?? $config->leadTag());
     }
 
     public function shouldRender(): bool
@@ -65,36 +69,8 @@ class Section extends Component
 
     protected function variantValue(mixed $value): string
     {
-        $variant = $this->nullableString($value) ?? 'inline';
+        $variant = Coerce::string($value, 'inline');
 
         return in_array($variant, ['inline', 'card', 'bar'], true) ? $variant : 'inline';
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

@@ -4,6 +4,8 @@ namespace Template\LandingLeadCapture\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 use Template\LandingLeadCapture\Support\LeadCaptureFields;
 
 class StoreLeadRequest extends FormRequest
@@ -15,6 +17,7 @@ class StoreLeadRequest extends FormRequest
 
     public function rules(): array
     {
+        $config = app(LeadCaptureConfig::class);
         $fields = app(LeadCaptureFields::class);
         $rules = [
             'source_page' => ['nullable', 'string', 'max:255'],
@@ -34,14 +37,14 @@ class StoreLeadRequest extends FormRequest
             $rules[$field] = $this->rulesForField($field, $fields->get($field));
         }
 
-        if ((bool) config('landing-lead-capture.privacy_consent.enabled', true)) {
-            $rules['privacy_consent'] = (bool) config('landing-lead-capture.privacy_consent.required', true)
+        if ($config->privacyConsentEnabled()) {
+            $rules['privacy_consent'] = $config->privacyConsentRequired()
                 ? ['accepted']
                 : ['nullable'];
         }
 
-        if ((bool) config('landing-lead-capture.anti_spam.honeypot', true)) {
-            $rules[$this->honeypotField()] = ['prohibited'];
+        if ($config->honeypotEnabled()) {
+            $rules[$config->honeypotField()] = ['prohibited'];
         }
 
         return $rules;
@@ -49,6 +52,7 @@ class StoreLeadRequest extends FormRequest
 
     public function validatedLeadData(): array
     {
+        $config = app(LeadCaptureConfig::class);
         $fields = app(LeadCaptureFields::class);
         $validated = $this->validated();
         $data = [];
@@ -58,9 +62,9 @@ class StoreLeadRequest extends FormRequest
         }
 
         $data['privacy_consent'] = $this->boolean('privacy_consent');
-        $data['source'] = $this->nullableString($validated['source'] ?? config('landing-lead-capture.lead.source'));
-        $data['campaign'] = $this->nullableString($validated['campaign'] ?? config('landing-lead-capture.lead.campaign'));
-        $data['tag'] = $this->nullableString($validated['tag'] ?? config('landing-lead-capture.lead.tag'));
+        $data['source'] = Coerce::nullableString($validated['source'] ?? $config->leadSource());
+        $data['campaign'] = Coerce::nullableString($validated['campaign'] ?? $config->leadCampaign());
+        $data['tag'] = Coerce::nullableString($validated['tag'] ?? $config->leadTag());
         $data['source_page'] = $validated['source_page'] ?? null;
         $data['source_url'] = $validated['source_url'] ?? null;
 
@@ -103,23 +107,5 @@ class StoreLeadRequest extends FormRequest
         }
 
         return [Rule::in(array_column($field['options'], 'value'))];
-    }
-
-    protected function honeypotField(): string
-    {
-        $field = trim((string) config('landing-lead-capture.anti_spam.honeypot_field', 'website'));
-
-        return $field === '' ? 'website' : $field;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

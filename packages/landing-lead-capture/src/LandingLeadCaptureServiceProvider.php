@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
+use Template\LandingLeadCapture\Config\LeadCaptureConfig;
 use Template\LandingLeadCapture\Support\LeadCaptureFields;
 
 class LandingLeadCaptureServiceProvider extends ServiceProvider
@@ -14,6 +15,9 @@ class LandingLeadCaptureServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-lead-capture.php', 'landing-lead-capture');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(LeadCaptureConfig::class, fn () => LeadCaptureConfig::fromConfig());
 
         $this->app->bind(LeadCaptureFields::class, fn () => new LeadCaptureFields);
     }
@@ -48,14 +52,16 @@ class LandingLeadCaptureServiceProvider extends ServiceProvider
     protected function registerCoreIntegrations(): void
     {
         $this->callAfterResolving(ModuleRegistry::class, function (ModuleRegistry $modules) {
+            $config = $this->app->make(LeadCaptureConfig::class);
+
             $modules->register([
                 'name' => 'landing-lead-capture',
                 'label' => 'Lead Capture',
-                'enabled' => (bool) config('landing-lead-capture.enabled', true),
+                'enabled' => $config->enabled(),
                 'description' => 'Short conversion form for landing page leads.',
                 'section' => [
                     'component' => 'lead-capture::section',
-                    'enabled' => (bool) config('landing-lead-capture.section.enabled', true),
+                    'enabled' => $config->sectionEnabled(),
                 ],
             ]);
         });

@@ -2,6 +2,8 @@
 
 namespace Template\LandingLeadCapture\Support;
 
+use Template\LandingCore\Support\Coerce;
+
 class LeadCaptureFields
 {
     public const SUPPORTED_FIELDS = [
@@ -78,12 +80,12 @@ class LeadCaptureFields
             ...$config,
         ];
 
-        $field['enabled'] = $this->boolValue($field['enabled'] ?? true, true);
-        $field['required'] = $this->boolValue($field['required'] ?? false, false);
-        $field['label'] = $this->stringValue($field['label'] ?? null, $default['label']);
-        $field['type'] = $this->stringValue($field['type'] ?? null, $default['type']);
-        $field['placeholder'] = $this->nullableString($field['placeholder'] ?? null);
-        $field['autocomplete'] = $this->nullableString($field['autocomplete'] ?? null);
+        $field['enabled'] = Coerce::bool($field['enabled'] ?? true, true);
+        $field['required'] = Coerce::bool($field['required'] ?? false, false);
+        $field['label'] = Coerce::string($field['label'] ?? null, $default['label']);
+        $field['type'] = Coerce::string($field['type'] ?? null, $default['type']);
+        $field['placeholder'] = Coerce::nullableString($field['placeholder'] ?? null);
+        $field['autocomplete'] = Coerce::nullableString($field['autocomplete'] ?? null);
         $field['options'] = $this->normalizeOptions($field['options'] ?? []);
 
         return $field;
@@ -160,38 +162,5 @@ class LeadCaptureFields
             ->filter(fn (array $option) => $option['value'] !== '' && $option['label'] !== '')
             ->values()
             ->all();
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
-    }
-
-    protected function stringValue(mixed $value, string $default): string
-    {
-        return $this->nullableString($value) ?? $default;
     }
 }

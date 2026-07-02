@@ -57,7 +57,7 @@ class TestimonialsConfig extends ModuleConfig
 
     public function limit(): ?int
     {
-        $limit = $this->int('limit', 6);
+        $limit = $this->int('limit', 0);
 
         return $limit > 0 ? $limit : null;
     }

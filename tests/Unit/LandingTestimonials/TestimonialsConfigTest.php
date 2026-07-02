@@ -18,7 +18,7 @@ class TestimonialsConfigTest extends TestCase
         $this->assertFalse($config->showRating());
         $this->assertTrue($config->showCompany());
         $this->assertTrue($config->showLogo());
-        $this->assertSame(6, $config->limit());
+        $this->assertNull($config->limit());
         $this->assertTrue($config->sectionEnabled());
         $this->assertNull($config->sectionTitle());
         $this->assertTrue($config->databaseEnabled());
@@ -73,8 +73,10 @@ class TestimonialsConfigTest extends TestCase
 
     public function test_limit_ignores_non_positive_values(): void
     {
+        $this->assertNull(TestimonialsConfig::fromArray(['limit' => null])->limit());
         $this->assertNull(TestimonialsConfig::fromArray(['limit' => 0])->limit());
         $this->assertNull(TestimonialsConfig::fromArray(['limit' => -1])->limit());
         $this->assertSame(10, TestimonialsConfig::fromArray(['limit' => '10'])->limit());
+        $this->assertSame(6, TestimonialsConfig::fromArray(['limit' => 6])->limit());
     }
 }

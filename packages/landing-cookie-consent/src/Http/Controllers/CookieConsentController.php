@@ -5,15 +5,15 @@ namespace Template\LandingCookieConsent\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
+use Template\LandingCookieConsent\Config\CookieConsentConfig;
 use Template\LandingCookieConsent\Http\Requests\StoreConsentRequest;
 use Template\LandingCookieConsent\Models\CookieConsent;
 
 class CookieConsentController extends Controller
 {
-    public function __invoke(StoreConsentRequest $request): JsonResponse
+    public function __invoke(StoreConsentRequest $request, CookieConsentConfig $config): JsonResponse
     {
-        if (! (bool) config('landing-cookie-consent.logging.enabled', true)
-            || ! (bool) config('landing-cookie-consent.logging.database.enabled', true)) {
+        if (! $config->loggingEnabled() || ! $config->loggingDatabaseEnabled()) {
             return response()->json(['recorded' => false]);
         }
 
@@ -21,8 +21,8 @@ class CookieConsentController extends Controller
 
         $consent = CookieConsent::query()->create([
             ...$data,
-            'ip_address' => (bool) config('landing-cookie-consent.logging.store_ip', false) ? $request->ip() : null,
-            'user_agent' => (bool) config('landing-cookie-consent.logging.store_user_agent', true)
+            'ip_address' => $config->loggingStoreIp() ? $request->ip() : null,
+            'user_agent' => $config->loggingStoreUserAgent()
                 ? Str::limit((string) $request->userAgent(), 1000, '')
                 : null,
             'created_at' => now(),

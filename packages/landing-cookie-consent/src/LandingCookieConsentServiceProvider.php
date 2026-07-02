@@ -4,8 +4,10 @@ namespace Template\LandingCookieConsent;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Template\LandingCookieConsent\Config\CookieConsentConfig;
 use Template\LandingCookieConsent\Support\CookieConsentManager;
 use Template\LandingCore\Support\AssetRegistry;
+use Template\LandingCore\Support\Coerce;
 use Template\LandingCore\Support\ModuleRegistry;
 use Template\LandingCore\Support\SectionRenderer;
 
@@ -14,6 +16,9 @@ class LandingCookieConsentServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-cookie-consent.php', 'landing-cookie-consent');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(CookieConsentConfig::class, fn () => CookieConsentConfig::fromConfig());
 
         $this->app->singleton(CookieConsentManager::class);
 
@@ -83,56 +88,27 @@ class LandingCookieConsentServiceProvider extends ServiceProvider
 
     protected function syncAnalyticsConsentConfig(): void
     {
-        if (! $this->boolValue(config('landing-cookie-consent.enabled', true), true)) {
+        $config = $this->app->make(CookieConsentConfig::class);
+
+        if (! $config->enabled()) {
             return;
         }
 
-        $integration = (array) config('landing-cookie-consent.integrations.analytics', []);
-
-        if (! $this->boolValue($integration['enabled'] ?? true, true)
-            || ! $this->boolValue($integration['sync_config'] ?? true, true)) {
+        if (! $config->integrationsAnalyticsEnabled() || ! $config->integrationsAnalyticsSyncConfig()) {
             return;
         }
 
-        $categories = (array) ($integration['categories'] ?? []);
-        $existing = (array) config('landing-analytics.consent', []);
+        $categories = $config->integrationsAnalyticsCategories();
+        $existing = (array) config()->get('landing-analytics.consent', []);
 
         config()->set('landing-analytics.consent', array_replace($existing, [
             'enabled' => true,
-            'storage_key' => $this->nullableString(config('landing-cookie-consent.storage_key')) ?? 'landing_cookie_consent',
-            'default_granted' => $this->boolValue($integration['default_granted'] ?? false, false),
+            'storage_key' => $config->storageKey(),
+            'default_granted' => $config->integrationsAnalyticsDefaultGranted(),
             'categories' => [
-                'analytics' => $this->nullableString($categories['analytics'] ?? null) ?? 'analytics',
-                'marketing' => $this->nullableString($categories['marketing'] ?? null) ?? 'marketing',
+                'analytics' => Coerce::nullableString($categories['analytics'] ?? null) ?? 'analytics',
+                'marketing' => Coerce::nullableString($categories['marketing'] ?? null) ?? 'marketing',
             ],
         ]));
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

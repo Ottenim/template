@@ -4,29 +4,33 @@ namespace Template\LandingCookieConsent\Support;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Template\LandingCookieConsent\Config\CookieConsentConfig;
+use Template\LandingCore\Support\Coerce;
 
 class CookieConsentManager
 {
     public function enabled(mixed $override = null): bool
     {
-        return $this->boolValue(config('landing-cookie-consent.enabled', true), true)
-            && $this->boolValue(config('landing-cookie-consent.banner.enabled', true), true)
-            && $this->boolValue($override, true);
+        $config = CookieConsentConfig::fromConfig();
+
+        return $config->enabled()
+            && $config->bannerEnabled()
+            && Coerce::bool($override, true);
     }
 
     public function storageKey(): string
     {
-        return $this->nullableString(config('landing-cookie-consent.storage_key')) ?? 'landing_cookie_consent';
+        return CookieConsentConfig::fromConfig()->storageKey();
     }
 
     public function policyUrl(): ?string
     {
-        return $this->nullableString(config('landing-cookie-consent.policy_url'));
+        return CookieConsentConfig::fromConfig()->policyUrl();
     }
 
     public function lifetimeDays(): int
     {
-        $days = (int) config('landing-cookie-consent.consent_lifetime_days', 180);
+        $days = CookieConsentConfig::fromConfig()->consentLifetimeDays();
 
         return $days > 0 ? $days : 180;
     }
@@ -35,8 +39,8 @@ class CookieConsentManager
     {
         $categories = [];
 
-        foreach ((array) config('landing-cookie-consent.categories', []) as $name => $category) {
-            if (! is_array($category) || ! $this->boolValue($category['enabled'] ?? true, true)) {
+        foreach (CookieConsentConfig::fromConfig()->categories() as $name => $category) {
+            if (! is_array($category) || ! Coerce::bool($category['enabled'] ?? true, true)) {
                 continue;
             }
 
@@ -46,14 +50,14 @@ class CookieConsentManager
                 continue;
             }
 
-            $required = $this->boolValue($category['required'] ?? $categoryName === 'necessary', $categoryName === 'necessary');
+            $required = Coerce::bool($category['required'] ?? $categoryName === 'necessary', $categoryName === 'necessary');
 
             $categories[$categoryName] = [
                 'name' => $categoryName,
-                'label' => $this->nullableString($category['label'] ?? null) ?? Str::headline($categoryName),
-                'description' => $this->nullableString($category['description'] ?? null),
+                'label' => Coerce::nullableString($category['label'] ?? null) ?? Str::headline($categoryName),
+                'description' => Coerce::nullableString($category['description'] ?? null),
                 'required' => $required,
-                'default' => $required || $this->boolValue($category['default'] ?? false, false),
+                'default' => $required || Coerce::bool($category['default'] ?? false, false),
             ];
         }
 
@@ -86,15 +90,16 @@ class CookieConsentManager
 
     public function clientConfig(): array
     {
+        $config = CookieConsentConfig::fromConfig();
+
         return [
             'storageKey' => $this->storageKey(),
-            'version' => $this->nullableString(config('landing-cookie-consent.version')) ?? '1',
+            'version' => $config->version(),
             'lifetimeDays' => $this->lifetimeDays(),
             'policyUrl' => $this->policyUrl(),
             'categories' => array_values($this->categories()),
-            'scriptSelector' => $this->nullableString(config('landing-cookie-consent.scripts.selector'))
-                ?? 'script[type="text/plain"][data-landing-cookie-category], script[type="text/plain"][data-cookie-category]',
-            'showReopenButton' => $this->boolValue(config('landing-cookie-consent.banner.show_reopen_button', true), true),
+            'scriptSelector' => $config->scriptsSelector(),
+            'showReopenButton' => $config->bannerShowReopenButton(),
             'logging' => [
                 'enabled' => $this->loggingEnabled(),
                 'endpoint' => $this->loggingEndpoint(),
@@ -113,9 +118,11 @@ class CookieConsentManager
 
     protected function loggingEnabled(): bool
     {
-        return $this->boolValue(config('landing-cookie-consent.logging.enabled', true), true)
-            && $this->boolValue(config('landing-cookie-consent.logging.database.enabled', true), true)
-            && $this->boolValue(config('landing-cookie-consent.logging.route.enabled', true), true);
+        $config = CookieConsentConfig::fromConfig();
+
+        return $config->loggingEnabled()
+            && $config->loggingDatabaseEnabled()
+            && $config->loggingRouteEnabled();
     }
 
     protected function loggingEndpoint(): ?string
@@ -124,13 +131,14 @@ class CookieConsentManager
             return null;
         }
 
-        $name = $this->nullableString(config('landing-cookie-consent.logging.route.name'));
+        $config = CookieConsentConfig::fromConfig();
+        $name = $config->loggingRouteName();
 
         if ($name && Route::has($name)) {
             return route($name);
         }
 
-        $uri = $this->nullableString(config('landing-cookie-consent.logging.route.uri', 'cookie-consent'));
+        $uri = $config->loggingRouteUri();
 
         return $uri ? url($uri) : null;
     }
@@ -138,33 +146,5 @@ class CookieConsentManager
     protected function categoryName(string $name): string
     {
         return trim((string) preg_replace('/[^a-z0-9_]+/', '_', strtolower($name)), '_');
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

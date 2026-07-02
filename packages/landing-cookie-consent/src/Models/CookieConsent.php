@@ -3,6 +3,7 @@
 namespace Template\LandingCookieConsent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingCookieConsent\Config\CookieConsentConfig;
 
 class CookieConsent extends Model
 {
@@ -34,6 +35,6 @@ class CookieConsent extends Model
 
     public function getTable(): string
     {
-        return config('landing-cookie-consent.logging.database.table', 'lp_cookie_consents');
+        return CookieConsentConfig::fromConfig()->loggingDatabaseTable();
     }
 }

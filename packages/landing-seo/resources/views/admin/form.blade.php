@@ -1,10 +1,11 @@
 @php
     $errors = $errors ?? new \Illuminate\Support\ViewErrorBag;
+    $previewDefaults = $previewDefaults ?? [];
     $schema = old('schema', $seoPage->schema ? json_encode($seoPage->schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '');
-    $previewTitle = old('title', $seoPage->title) ?: config('landing-seo.defaults.title');
-    $previewDescription = old('description', $seoPage->description) ?: config('landing-seo.defaults.description');
+    $previewTitle = old('title', $seoPage->title) ?: ($previewDefaults['title'] ?? null);
+    $previewDescription = old('description', $seoPage->description) ?: ($previewDefaults['description'] ?? null);
     $previewUrl = old('canonical_url', $seoPage->canonical_url) ?: rtrim(config('app.url'), '/').(old('path', $seoPage->path) ?: '/');
-    $previewImage = old('image_url', $seoPage->image_url) ?: config('landing-seo.defaults.image');
+    $previewImage = old('image_url', $seoPage->image_url) ?: ($previewDefaults['image'] ?? null);
 @endphp
 
 <div class="lp-seo-admin-grid">

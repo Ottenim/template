@@ -15,6 +15,7 @@
                 'action' => route('seo.admin.store'),
                 'method' => 'POST',
                 'submitLabel' => 'Criar pagina',
+                'previewDefaults' => $previewDefaults,
             ])
         </div>
     </section>

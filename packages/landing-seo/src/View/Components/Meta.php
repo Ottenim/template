@@ -4,6 +4,8 @@ namespace Template\LandingSeo\View\Components;
 
 use Illuminate\View\Component;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingSeo\Config\SeoConfig;
 use Template\LandingSeo\Support\SeoManager;
 
 class Meta extends Component
@@ -27,8 +29,8 @@ class Meta extends Component
         mixed $schema = null,
         mixed $includeTitle = null,
     ) {
-        $this->enabled = (bool) config('landing-seo.enabled', true);
-        $this->includeTitle = $this->boolValue($includeTitle, true);
+        $this->enabled = app(SeoConfig::class)->enabled();
+        $this->includeTitle = Coerce::bool($includeTitle, true);
 
         $overrides = array_filter([
             'title' => $title,
@@ -53,22 +55,5 @@ class Meta extends Component
     public function render(): View
     {
         return view('landing-seo::components.meta');
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
     }
 }

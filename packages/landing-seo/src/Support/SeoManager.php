@@ -5,6 +5,8 @@ namespace Template\LandingSeo\Support;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingSeo\Config\SeoConfig;
 use Template\LandingSeo\Models\SeoPage;
 use Throwable;
 
@@ -34,7 +36,9 @@ class SeoManager
 
     public function schemaJson(array $data): ?string
     {
-        if (! (bool) ($data['schema_enabled'] ?? config('landing-seo.schema.enabled', true))) {
+        $config = SeoConfig::fromConfig();
+
+        if (! Coerce::bool($data['schema_enabled'] ?? $config->schemaEnabled(), $config->schemaEnabled())) {
             return null;
         }
 
@@ -67,12 +71,13 @@ class SeoManager
 
     public function sitemapEntries(): Collection
     {
+        $config = SeoConfig::fromConfig();
         $entries = collect();
 
-        if ((bool) config('landing-seo.sitemap.include_home', true)) {
+        if ($config->sitemapIncludeHome()) {
             $entries->push($this->sitemapEntry([
                 'path' => '/',
-                'title' => config('landing-seo.defaults.title'),
+                'title' => $config->defaultsTitle(),
             ]));
         }
 
@@ -88,15 +93,16 @@ class SeoManager
 
     public function robotsText(): string
     {
+        $config = SeoConfig::fromConfig();
         $lines = [];
-        $rules = config('landing-seo.robots_txt.rules', []);
+        $rules = $config->robotsTxtRules();
 
         if ($rules === []) {
             $rules = [['user_agent' => '*', 'disallow' => [], 'allow' => []]];
         }
 
         foreach ($rules as $rule) {
-            $lines[] = 'User-agent: '.($this->nullableString(data_get($rule, 'user_agent')) ?? '*');
+            $lines[] = 'User-agent: '.(Coerce::nullableString(data_get($rule, 'user_agent')) ?? '*');
 
             foreach ((array) data_get($rule, 'allow', []) as $allow) {
                 $lines[] = 'Allow: '.SeoUrl::normalizePath($allow);
@@ -115,7 +121,7 @@ class SeoManager
             $lines[] = '';
         }
 
-        if ((bool) config('landing-seo.robots_txt.include_sitemap', true) && (bool) config('landing-seo.sitemap.enabled', true)) {
+        if ($config->robotsTxtIncludeSitemap() && $config->sitemapEnabled()) {
             $lines[] = 'Sitemap: '.rtrim((string) config('app.url'), '/').'/sitemap.xml';
         }
 
@@ -148,7 +154,7 @@ class SeoManager
 
     protected function configuredPage(?string $path, ?string $routeName): array
     {
-        foreach (config('landing-seo.pages', []) as $key => $page) {
+        foreach (SeoConfig::fromConfig()->pages() as $key => $page) {
             if (! is_array($page)) {
                 continue;
             }
@@ -156,7 +162,7 @@ class SeoManager
             $keyPath = is_string($key) && str_starts_with($key, '/') ? $key : null;
             $keyRoute = is_string($key) && ! str_starts_with($key, '/') ? $key : null;
             $pagePath = SeoUrl::normalizePath(data_get($page, 'path', $keyPath));
-            $pageRoute = $this->nullableString(data_get($page, 'route_name', $keyRoute));
+            $pageRoute = Coerce::nullableString(data_get($page, 'route_name', $keyRoute));
 
             if (($path && $pagePath === $path) || ($routeName && ($pageRoute === $routeName || $key === $routeName))) {
                 return $this->normalizeInput([
@@ -173,11 +179,13 @@ class SeoManager
 
     protected function databasePage(?string $path, ?string $routeName): array
     {
-        if (! (bool) config('landing-seo.database.enabled', true)) {
+        $config = SeoConfig::fromConfig();
+
+        if (! $config->databaseEnabled()) {
             return [];
         }
 
-        $table = config('landing-seo.database.table', 'lp_seo_pages');
+        $table = $config->databaseTable();
 
         try {
             if (! Schema::hasTable($table)) {
@@ -210,23 +218,25 @@ class SeoManager
 
     protected function defaults(): array
     {
+        $config = SeoConfig::fromConfig();
+
         return [
-            'title' => config('landing-seo.defaults.title'),
-            'title_template' => config('landing-seo.defaults.title_template', '%s'),
-            'description' => config('landing-seo.defaults.description'),
-            'canonical_url' => config('landing-seo.defaults.canonical_url'),
-            'image_url' => config('landing-seo.defaults.image'),
-            'favicon_url' => config('landing-seo.defaults.favicon'),
-            'robots' => config('landing-seo.defaults.robots', 'index,follow'),
-            'site_name' => config('landing-seo.defaults.site_name'),
-            'locale' => config('landing-seo.defaults.locale'),
-            'og_type' => config('landing-seo.open_graph.type', 'website'),
-            'twitter_card' => config('landing-seo.twitter.card', 'summary_large_image'),
-            'twitter_site' => config('landing-seo.twitter.site'),
-            'open_graph_enabled' => config('landing-seo.open_graph.enabled', true),
-            'twitter_enabled' => config('landing-seo.twitter.enabled', true),
-            'schema_enabled' => config('landing-seo.schema.enabled', true),
-            'schema_type' => config('landing-seo.schema.type', 'WebSite'),
+            'title' => $config->defaultsTitle(),
+            'title_template' => $config->defaultsTitleTemplate(),
+            'description' => $config->defaultsDescription(),
+            'canonical_url' => $config->defaultsCanonicalUrl(),
+            'image_url' => $config->defaultsImage(),
+            'favicon_url' => $config->defaultsFavicon(),
+            'robots' => $config->defaultsRobots(),
+            'site_name' => $config->defaultsSiteName(),
+            'locale' => $config->defaultsLocale(),
+            'og_type' => $config->openGraphType(),
+            'twitter_card' => $config->twitterCard(),
+            'twitter_site' => $config->twitterSite(),
+            'open_graph_enabled' => $config->openGraphEnabled(),
+            'twitter_enabled' => $config->twitterEnabled(),
+            'schema_enabled' => $config->schemaEnabled(),
+            'schema_type' => $config->schemaType(),
             'path' => $this->currentPath(),
             'route_name' => $this->currentRouteName(),
         ];
@@ -253,54 +263,54 @@ class SeoManager
     {
         $path = SeoUrl::normalizePath(data_get($data, 'path')) ?? $this->currentPath();
         $title = $this->formatTitle(
-            $this->nullableString(data_get($data, 'title')),
-            $this->nullableString(data_get($data, 'title_template')) ?? '%s',
+            Coerce::nullableString(data_get($data, 'title')),
+            Coerce::nullableString(data_get($data, 'title_template')) ?? '%s',
         );
-        $description = $this->nullableString(data_get($data, 'description'));
+        $description = Coerce::nullableString(data_get($data, 'description'));
         $canonical = SeoUrl::normalize(data_get($data, 'canonical_url'), true)
             ?: SeoUrl::normalize($path, true)
             ?: $this->currentUrl();
         $image = SeoUrl::normalize(data_get($data, 'image_url'), true);
         $favicon = SeoUrl::normalize(data_get($data, 'favicon_url'), true);
-        $ogTitle = $this->nullableString(data_get($data, 'og_title')) ?? $title;
-        $ogDescription = $this->nullableString(data_get($data, 'og_description')) ?? $description;
+        $ogTitle = Coerce::nullableString(data_get($data, 'og_title')) ?? $title;
+        $ogDescription = Coerce::nullableString(data_get($data, 'og_description')) ?? $description;
         $ogImage = SeoUrl::normalize(data_get($data, 'og_image'), true) ?? $image;
-        $twitterTitle = $this->nullableString(data_get($data, 'twitter_title')) ?? $ogTitle;
-        $twitterDescription = $this->nullableString(data_get($data, 'twitter_description')) ?? $ogDescription;
+        $twitterTitle = Coerce::nullableString(data_get($data, 'twitter_title')) ?? $ogTitle;
+        $twitterDescription = Coerce::nullableString(data_get($data, 'twitter_description')) ?? $ogDescription;
         $twitterImage = SeoUrl::normalize(data_get($data, 'twitter_image'), true) ?? $ogImage;
 
         return [
-            'page_key' => $this->nullableString(data_get($data, 'page_key')),
+            'page_key' => Coerce::nullableString(data_get($data, 'page_key')),
             'path' => $path,
-            'route_name' => $this->nullableString(data_get($data, 'route_name')),
+            'route_name' => Coerce::nullableString(data_get($data, 'route_name')),
             'title' => $title,
             'description' => $description,
             'canonical_url' => $canonical,
             'image_url' => $image,
             'favicon_url' => $favicon,
-            'robots' => $this->nullableString(data_get($data, 'robots')) ?? 'index,follow',
-            'site_name' => $this->nullableString(data_get($data, 'site_name')),
-            'locale' => $this->nullableString(data_get($data, 'locale')),
+            'robots' => Coerce::nullableString(data_get($data, 'robots')) ?? 'index,follow',
+            'site_name' => Coerce::nullableString(data_get($data, 'site_name')),
+            'locale' => Coerce::nullableString(data_get($data, 'locale')),
             'og_title' => $ogTitle,
             'og_description' => $ogDescription,
             'og_image' => $ogImage,
-            'og_type' => $this->nullableString(data_get($data, 'og_type')) ?? 'website',
+            'og_type' => Coerce::nullableString(data_get($data, 'og_type')) ?? 'website',
             'twitter_title' => $twitterTitle,
             'twitter_description' => $twitterDescription,
             'twitter_image' => $twitterImage,
-            'twitter_card' => $this->nullableString(data_get($data, 'twitter_card')) ?? 'summary_large_image',
-            'twitter_site' => $this->nullableString(data_get($data, 'twitter_site')),
+            'twitter_card' => Coerce::nullableString(data_get($data, 'twitter_card')) ?? 'summary_large_image',
+            'twitter_site' => Coerce::nullableString(data_get($data, 'twitter_site')),
             'schema' => data_get($data, 'schema'),
-            'schema_type' => $this->nullableString(data_get($data, 'schema_type')) ?? 'WebSite',
-            'open_graph_enabled' => $this->boolValue(data_get($data, 'open_graph_enabled'), true),
-            'twitter_enabled' => $this->boolValue(data_get($data, 'twitter_enabled'), true),
-            'schema_enabled' => $this->boolValue(data_get($data, 'schema_enabled'), true),
+            'schema_type' => Coerce::nullableString(data_get($data, 'schema_type')) ?? 'WebSite',
+            'open_graph_enabled' => Coerce::bool(data_get($data, 'open_graph_enabled'), true),
+            'twitter_enabled' => Coerce::bool(data_get($data, 'twitter_enabled'), true),
+            'schema_enabled' => Coerce::bool(data_get($data, 'schema_enabled'), true),
         ];
     }
 
     protected function basicSchema(array $data): ?array
     {
-        $type = $this->nullableString($data['schema_type'] ?? null);
+        $type = Coerce::nullableString($data['schema_type'] ?? null);
 
         if ($type === null) {
             return null;
@@ -332,7 +342,8 @@ class SeoManager
 
     protected function organizationSchema(): ?array
     {
-        $name = $this->nullableString(config('landing-seo.schema.organization.name'));
+        $config = SeoConfig::fromConfig();
+        $name = $config->schemaOrganizationName();
 
         if ($name === null) {
             return null;
@@ -343,11 +354,11 @@ class SeoManager
             'name' => $name,
         ];
 
-        if ($url = SeoUrl::normalize(config('landing-seo.schema.organization.url'), true)) {
+        if ($url = SeoUrl::normalize($config->schemaOrganizationUrl(), true)) {
             $schema['url'] = $url;
         }
 
-        if ($logo = SeoUrl::normalize(config('landing-seo.schema.organization.logo'), true)) {
+        if ($logo = SeoUrl::normalize($config->schemaOrganizationLogo(), true)) {
             $schema['logo'] = $logo;
         }
 
@@ -380,7 +391,7 @@ class SeoManager
 
     protected function configuredSitemapEntries(): Collection
     {
-        return collect(config('landing-seo.pages', []))
+        return collect(SeoConfig::fromConfig()->pages())
             ->map(function (mixed $page, string|int $key) {
                 if (! is_array($page)) {
                     return null;
@@ -402,11 +413,13 @@ class SeoManager
 
     protected function databaseSitemapEntries(): Collection
     {
-        if (! (bool) config('landing-seo.database.enabled', true)) {
+        $config = SeoConfig::fromConfig();
+
+        if (! $config->databaseEnabled()) {
             return collect();
         }
 
-        $table = config('landing-seo.database.table', 'lp_seo_pages');
+        $table = $config->databaseTable();
 
         try {
             if (! Schema::hasTable($table)) {
@@ -425,6 +438,7 @@ class SeoManager
 
     protected function sitemapEntry(array $page): ?array
     {
+        $config = SeoConfig::fromConfig();
         $url = SeoUrl::normalize($page['canonical_url'] ?? null, true)
             ?? SeoUrl::normalize(SeoUrl::normalizePath($page['path'] ?? null), true);
 
@@ -435,9 +449,9 @@ class SeoManager
         return [
             'loc' => $url,
             'lastmod' => $page['updated_at'] ?? null,
-            'changefreq' => $this->nullableString($page['sitemap_changefreq'] ?? null)
-                ?? config('landing-seo.sitemap.default_changefreq', 'weekly'),
-            'priority' => $page['sitemap_priority'] ?? config('landing-seo.sitemap.default_priority', 0.5),
+            'changefreq' => Coerce::nullableString($page['sitemap_changefreq'] ?? null)
+                ?? $config->sitemapDefaultChangefreq(),
+            'priority' => $page['sitemap_priority'] ?? $config->sitemapDefaultPriority(),
         ];
     }
 
@@ -463,33 +477,5 @@ class SeoManager
     protected function currentUrl(): string
     {
         return request()->url() ?: rtrim((string) config('app.url'), '/').$this->currentPath();
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }

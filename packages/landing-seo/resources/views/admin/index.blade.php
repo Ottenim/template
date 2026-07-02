@@ -42,7 +42,7 @@
 
                                         <div class="lp-seo-admin-meta">
                                             <span class="lp-badge">{{ $seoPage->path ?: $seoPage->route_name ?: $seoPage->page_key }}</span>
-                                            <span class="lp-muted">{{ $seoPage->robots ?: config('landing-seo.defaults.robots') }}</span>
+                                            <span class="lp-muted">{{ $seoPage->robots ?: $defaultRobots }}</span>
                                             <span class="lp-muted">{{ $seoPage->sitemap_enabled ? 'Sitemap' : 'Fora do sitemap' }}</span>
                                             <span class="lp-muted">{{ $seoPage->is_active ? 'Ativa' : 'Inativa' }}</span>
                                         </div>

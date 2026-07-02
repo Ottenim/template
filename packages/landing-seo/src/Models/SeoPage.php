@@ -4,6 +4,7 @@ namespace Template\LandingSeo\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Template\LandingSeo\Config\SeoConfig;
 
 class SeoPage extends Model
 {
@@ -49,7 +50,7 @@ class SeoPage extends Model
 
     public function getTable()
     {
-        return config('landing-seo.database.table', 'lp_seo_pages');
+        return SeoConfig::fromConfig()->databaseTable();
     }
 
     public function scopeActive(Builder $query): Builder

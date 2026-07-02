@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Template\LandingCore\Support\Coerce;
+use Template\LandingSeo\Config\SeoConfig;
 use Template\LandingSeo\Http\Requests\StoreSeoPageRequest;
 use Template\LandingSeo\Http\Requests\UpdateSeoPageRequest;
 use Template\LandingSeo\Models\SeoPage;
@@ -13,31 +15,33 @@ use Template\LandingSeo\Support\SeoUrl;
 
 class SeoPageAdminController extends Controller
 {
-    public function index(): View
+    public function index(SeoConfig $config): View
     {
         $seoPages = SeoPage::query()
             ->ordered()
-            ->paginate((int) config('landing-seo.admin.per_page', 15));
+            ->paginate($config->adminPerPage());
 
         return view('landing-seo::admin.index', [
             'seoPages' => $seoPages,
+            'defaultRobots' => $config->defaultsRobots(),
         ]);
     }
 
-    public function create(): View
+    public function create(SeoConfig $config): View
     {
         return view('landing-seo::admin.create', [
             'seoPage' => new SeoPage([
                 'page_key' => 'home',
                 'path' => '/',
-                'robots' => config('landing-seo.defaults.robots', 'index,follow'),
-                'og_type' => config('landing-seo.open_graph.type', 'website'),
-                'twitter_card' => config('landing-seo.twitter.card', 'summary_large_image'),
+                'robots' => $config->defaultsRobots(),
+                'og_type' => $config->openGraphType(),
+                'twitter_card' => $config->twitterCard(),
                 'sitemap_enabled' => true,
-                'sitemap_changefreq' => config('landing-seo.sitemap.default_changefreq', 'weekly'),
-                'sitemap_priority' => config('landing-seo.sitemap.default_priority', 0.5),
+                'sitemap_changefreq' => $config->sitemapDefaultChangefreq(),
+                'sitemap_priority' => $config->sitemapDefaultPriority(),
                 'is_active' => true,
             ]),
+            'previewDefaults' => $this->previewDefaults($config),
         ]);
     }
 
@@ -50,10 +54,11 @@ class SeoPageAdminController extends Controller
             ->with('landing_seo_success', 'Pagina SEO criada com sucesso.');
     }
 
-    public function edit(SeoPage $seoPage): View
+    public function edit(SeoPage $seoPage, SeoConfig $config): View
     {
         return view('landing-seo::admin.edit', [
             'seoPage' => $seoPage,
+            'previewDefaults' => $this->previewDefaults($config),
         ]);
     }
 
@@ -78,26 +83,26 @@ class SeoPageAdminController extends Controller
     protected function payload(FormRequest $request): array
     {
         return [
-            'page_key' => $this->nullableString($request->input('page_key')),
+            'page_key' => Coerce::nullableString($request->input('page_key')),
             'path' => SeoUrl::normalizePath($request->input('path')),
-            'route_name' => $this->nullableString($request->input('route_name')),
-            'title' => $this->nullableString($request->input('title')),
-            'description' => $this->nullableString($request->input('description')),
+            'route_name' => Coerce::nullableString($request->input('route_name')),
+            'title' => Coerce::nullableString($request->input('title')),
+            'description' => Coerce::nullableString($request->input('description')),
             'canonical_url' => SeoUrl::normalize($request->input('canonical_url'), true),
             'image_url' => SeoUrl::normalize($request->input('image_url'), true),
             'favicon_url' => SeoUrl::normalize($request->input('favicon_url'), true),
-            'robots' => $this->nullableString($request->input('robots')),
-            'og_title' => $this->nullableString($request->input('og_title')),
-            'og_description' => $this->nullableString($request->input('og_description')),
+            'robots' => Coerce::nullableString($request->input('robots')),
+            'og_title' => Coerce::nullableString($request->input('og_title')),
+            'og_description' => Coerce::nullableString($request->input('og_description')),
             'og_image' => SeoUrl::normalize($request->input('og_image'), true),
-            'og_type' => $this->nullableString($request->input('og_type')),
-            'twitter_title' => $this->nullableString($request->input('twitter_title')),
-            'twitter_description' => $this->nullableString($request->input('twitter_description')),
+            'og_type' => Coerce::nullableString($request->input('og_type')),
+            'twitter_title' => Coerce::nullableString($request->input('twitter_title')),
+            'twitter_description' => Coerce::nullableString($request->input('twitter_description')),
             'twitter_image' => SeoUrl::normalize($request->input('twitter_image'), true),
-            'twitter_card' => $this->nullableString($request->input('twitter_card')),
+            'twitter_card' => Coerce::nullableString($request->input('twitter_card')),
             'schema' => $this->schemaArray($request->input('schema')),
             'sitemap_enabled' => $request->boolean('sitemap_enabled'),
-            'sitemap_changefreq' => $this->nullableString($request->input('sitemap_changefreq')),
+            'sitemap_changefreq' => Coerce::nullableString($request->input('sitemap_changefreq')),
             'sitemap_priority' => $this->priorityValue($request->input('sitemap_priority')),
             'is_active' => $request->boolean('is_active'),
         ];
@@ -105,7 +110,7 @@ class SeoPageAdminController extends Controller
 
     protected function schemaArray(mixed $value): ?array
     {
-        $json = $this->nullableString($value);
+        $json = Coerce::nullableString($value);
 
         if ($json === null) {
             return null;
@@ -125,14 +130,15 @@ class SeoPageAdminController extends Controller
         return min(1, max(0, (float) $value));
     }
 
-    protected function nullableString(mixed $value): ?string
+    /**
+     * @return array<string, mixed>
+     */
+    protected function previewDefaults(SeoConfig $config): array
     {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
+        return [
+            'title' => $config->defaultsTitle(),
+            'description' => $config->defaultsDescription(),
+            'image' => $config->defaultsImage(),
+        ];
     }
 }

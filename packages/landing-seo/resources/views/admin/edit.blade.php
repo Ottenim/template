@@ -15,6 +15,7 @@
                 'action' => route('seo.admin.update', $seoPage),
                 'method' => 'PUT',
                 'submitLabel' => 'Salvar pagina',
+                'previewDefaults' => $previewDefaults,
             ])
         </div>
     </section>

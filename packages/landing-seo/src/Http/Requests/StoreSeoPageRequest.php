@@ -5,6 +5,7 @@ namespace Template\LandingSeo\Http\Requests;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Template\LandingSeo\Config\SeoConfig;
 use Template\LandingSeo\Support\SeoUrl;
 
 class StoreSeoPageRequest extends FormRequest
@@ -16,7 +17,7 @@ class StoreSeoPageRequest extends FormRequest
 
     public function rules(): array
     {
-        $table = config('landing-seo.database.table', 'lp_seo_pages');
+        $table = SeoConfig::fromConfig()->databaseTable();
 
         return [
             'page_key' => ['required', 'string', 'max:120', Rule::unique($table, 'page_key')],

@@ -4,6 +4,7 @@ namespace Template\LandingAnalytics;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Template\LandingAnalytics\Config\AnalyticsConfig;
 use Template\LandingAnalytics\Support\AnalyticsManager;
 use Template\LandingCore\Support\AssetRegistry;
 use Template\LandingCore\Support\ModuleRegistry;
@@ -13,6 +14,9 @@ class LandingAnalyticsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/landing-analytics.php', 'landing-analytics');
+
+        // Bind transitório: lê o snapshot atual da config a cada resolução.
+        $this->app->bind(AnalyticsConfig::class, fn () => AnalyticsConfig::fromConfig());
 
         $this->app->singleton(AnalyticsManager::class);
     }

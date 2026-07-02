@@ -4,13 +4,16 @@ namespace Template\LandingAnalytics\Support;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Template\LandingAnalytics\Config\AnalyticsConfig;
+use Template\LandingCore\Analytics\LandingEvent;
+use Template\LandingCore\Support\Coerce;
 
 class AnalyticsManager
 {
     public function enabled(mixed $override = null): bool
     {
-        return $this->boolValue(config('landing-analytics.enabled', true), true)
-            && $this->boolValue($override, true);
+        return AnalyticsConfig::fromConfig()->enabled()
+            && Coerce::bool($override, true);
     }
 
     public function debug(mixed $override = null): bool
@@ -19,11 +22,13 @@ class AnalyticsManager
             return false;
         }
 
-        if (! $this->boolValue($override ?? config('landing-analytics.debug', false), false)) {
+        $config = AnalyticsConfig::fromConfig();
+
+        if (! Coerce::bool($override, $config->debug())) {
             return false;
         }
 
-        $environments = array_filter((array) config('landing-analytics.debug_environments', ['local', 'testing']));
+        $environments = $config->debugEnvironments();
 
         return $environments === [] || app()->environment($environments);
     }
@@ -32,12 +37,12 @@ class AnalyticsManager
     {
         $providers = [];
 
-        foreach ((array) config('landing-analytics.providers', []) as $name => $provider) {
-            if (! is_array($provider) || ! $this->boolValue($provider['enabled'] ?? false, false)) {
+        foreach (AnalyticsConfig::fromConfig()->providers() as $name => $provider) {
+            if (! is_array($provider) || ! Coerce::bool($provider['enabled'] ?? false, false)) {
                 continue;
             }
 
-            $id = $this->nullableString($provider['id'] ?? null);
+            $id = Coerce::nullableString($provider['id'] ?? null);
 
             if ($id === null) {
                 continue;
@@ -47,8 +52,8 @@ class AnalyticsManager
                 'name' => (string) $name,
                 'label' => $this->providerLabel((string) $name, $provider),
                 'id' => $id,
-                'category' => $this->nullableString($provider['category'] ?? null) ?? 'analytics',
-                'send_page_view' => $this->boolValue($provider['send_page_view'] ?? false, false),
+                'category' => Coerce::nullableString($provider['category'] ?? null) ?? 'analytics',
+                'send_page_view' => Coerce::bool($provider['send_page_view'] ?? false, false),
                 'conversion_ids' => $this->conversionIds((array) ($provider['conversion_ids'] ?? [])),
             ];
         }
@@ -64,17 +69,26 @@ class AnalyticsManager
     public function events(): array
     {
         $events = [];
+        $configured = AnalyticsConfig::fromConfig()->events();
+        $knownEvents = array_map(
+            fn (LandingEvent $event): string => $event->value,
+            LandingEvent::cases(),
+        );
 
-        foreach ((array) config('landing-analytics.events', []) as $name => $event) {
-            $eventName = $this->nullableString($name);
+        foreach ($knownEvents as $eventName) {
+            if (array_key_exists($eventName, $configured)) {
+                $events[$eventName] = $this->eventEnabled($configured[$eventName]);
+            }
+        }
 
-            if ($eventName === null) {
+        foreach ($configured as $name => $event) {
+            $eventName = Coerce::nullableString($name);
+
+            if ($eventName === null || in_array($eventName, $knownEvents, true)) {
                 continue;
             }
 
-            $events[$eventName] = is_array($event)
-                ? $this->boolValue($event['enabled'] ?? true, true)
-                : $this->boolValue($event, true);
+            $events[$eventName] = $this->eventEnabled($event);
         }
 
         return $events;
@@ -87,6 +101,8 @@ class AnalyticsManager
 
     public function clientConfig(mixed $enabled = null, mixed $debug = null): array
     {
+        $config = AnalyticsConfig::fromConfig();
+
         return [
             'enabled' => $this->enabled($enabled),
             'debug' => $this->debug($debug),
@@ -94,8 +110,8 @@ class AnalyticsManager
             'providers' => $this->providers(),
             'events' => $this->events(),
             'autoTrack' => [
-                'clicks' => $this->boolValue(config('landing-analytics.auto_track.clicks', true), true),
-                'forms' => $this->boolValue(config('landing-analytics.auto_track.forms', true), true),
+                'clicks' => $config->autoTrackClicks(),
+                'forms' => $config->autoTrackForms(),
                 'scrollDepth' => $this->scrollDepthConfig(),
             ],
             'selectors' => $this->selectors(),
@@ -124,16 +140,23 @@ class AnalyticsManager
 
     protected function providerLabel(string $name, array $provider): string
     {
-        return $this->nullableString($provider['label'] ?? null)
+        return Coerce::nullableString($provider['label'] ?? null)
             ?? Str::headline(str_replace('_', ' ', $name));
+    }
+
+    protected function eventEnabled(mixed $event): bool
+    {
+        return is_array($event)
+            ? Coerce::bool($event['enabled'] ?? true, true)
+            : Coerce::bool($event, true);
     }
 
     protected function conversionIds(array $conversionIds): array
     {
         return collect($conversionIds)
             ->mapWithKeys(function (mixed $value, mixed $event): array {
-                $eventName = $this->nullableString($event);
-                $conversionId = $this->nullableString($value);
+                $eventName = Coerce::nullableString($event);
+                $conversionId = Coerce::nullableString($value);
 
                 if ($eventName === null || $conversionId === null) {
                     return [];
@@ -146,11 +169,11 @@ class AnalyticsManager
 
     protected function scrollDepthConfig(): array
     {
-        $config = (array) config('landing-analytics.auto_track.scroll_depth', []);
-        $eventName = $this->nullableString($config['event_name'] ?? null) ?? 'scroll_depth';
+        $config = AnalyticsConfig::fromConfig()->autoTrackScrollDepth();
+        $eventName = Coerce::nullableString($config['event_name'] ?? null) ?? LandingEvent::ScrollDepth->value;
 
         return [
-            'enabled' => $this->boolValue($config['enabled'] ?? false, false)
+            'enabled' => Coerce::bool($config['enabled'] ?? false, false)
                 && ($this->events()[$eventName] ?? true),
             'event' => $eventName,
             'percentages' => collect($config['percentages'] ?? [25, 50, 75, 100])
@@ -172,14 +195,14 @@ class AnalyticsManager
 
     protected function selectorGroup(string $group): array
     {
-        return collect((array) config("landing-analytics.selectors.{$group}", []))
+        return collect(AnalyticsConfig::fromConfig()->selectors($group))
             ->map(function (mixed $selector): ?array {
                 if (! is_array($selector)) {
                     return null;
                 }
 
-                $cssSelector = $this->nullableString($selector['selector'] ?? null);
-                $attribute = $this->nullableString($selector['attribute'] ?? null);
+                $cssSelector = Coerce::nullableString($selector['selector'] ?? null);
+                $attribute = Coerce::nullableString($selector['attribute'] ?? null);
 
                 if ($cssSelector === null || $attribute === null) {
                     return null;
@@ -188,7 +211,7 @@ class AnalyticsManager
                 return [
                     'selector' => $cssSelector,
                     'attribute' => $attribute,
-                    'module' => $this->nullableString($selector['module'] ?? null),
+                    'module' => Coerce::nullableString($selector['module'] ?? null),
                 ];
             })
             ->filter()
@@ -198,52 +221,24 @@ class AnalyticsManager
 
     protected function consentConfig(): array
     {
-        $config = (array) config('landing-analytics.consent', []);
+        $config = AnalyticsConfig::fromConfig()->consent();
         $categories = (array) ($config['categories'] ?? []);
 
         return [
-            'enabled' => $this->boolValue($config['enabled'] ?? false, false),
-            'storageKey' => $this->nullableString($config['storage_key'] ?? null) ?? 'landing_cookie_consent',
-            'defaultGranted' => $this->boolValue($config['default_granted'] ?? false, false),
+            'enabled' => Coerce::bool($config['enabled'] ?? false, false),
+            'storageKey' => Coerce::nullableString($config['storage_key'] ?? null) ?? 'landing_cookie_consent',
+            'defaultGranted' => Coerce::bool($config['default_granted'] ?? false, false),
             'categories' => [
-                'analytics' => $this->nullableString(Arr::get($categories, 'analytics')) ?? 'analytics',
-                'marketing' => $this->nullableString(Arr::get($categories, 'marketing')) ?? 'marketing',
+                'analytics' => Coerce::nullableString(Arr::get($categories, 'analytics')) ?? 'analytics',
+                'marketing' => Coerce::nullableString(Arr::get($categories, 'marketing')) ?? 'marketing',
             ],
         ];
     }
 
     protected function dataLayerName(): string
     {
-        $name = $this->nullableString(config('landing-analytics.data_layer', 'dataLayer')) ?? 'dataLayer';
+        $name = AnalyticsConfig::fromConfig()->dataLayer();
 
         return preg_match('/^[A-Za-z_$][A-Za-z0-9_$]*$/', $name) ? $name : 'dataLayer';
-    }
-
-    protected function boolValue(mixed $value, bool $default): bool
-    {
-        if ($value === null) {
-            return $default;
-        }
-
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
-        }
-
-        return (bool) $value;
-    }
-
-    protected function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
     }
 }
